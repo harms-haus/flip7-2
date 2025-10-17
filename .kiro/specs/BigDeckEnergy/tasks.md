@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Set up TypeScript npm package project structure
+- [x] 1. Set up TypeScript npm package project structure
   - Create TypeScript project with tsconfig.json for ES2020+ target
   - Set up package.json with proper npm package naming (big-deck-energy)
   - Configure build scripts for CommonJS and ES Module outputs
@@ -11,13 +11,13 @@
   - _Requirements: 1.5, 2.1, 8.1, 8.2_
 
 - [ ] 2. Implement core data models and validation
-- [ ] 2.1 Create immutable Card model with visual properties
+- [x] 2.1 Create immutable Card model with visual properties
   - Implement Card interface with face ID, tail ID, and static properties
   - Create CardOrientation enum for card positioning
   - Ensure card immutability throughout the system
   - _Requirements: 1.1, 1.2, 1.4_
 
-- [ ] 2.2 Implement Participant, Gameboard and Hand interfaces with ownership tracking
+- [x] 2.2 Implement Participant, Gameboard and Hand interfaces with ownership tracking
   - Create Participant interface for players and NPCs with status and hand management
   - Create Gameboard interface with piles, placements, and status that track card state
   - Create Hand interface separate from participants with card state tracking
@@ -25,16 +25,22 @@
   - Add face-up status, orientation, ownership, and custom status tracking for cards in piles and placements
   - _Requirements: 4.1, 4.2, 4.3, 6.1, 6.2_
 
-- [ ] 2.3 Create GameState with comprehensive Game State API
-  - Implement GameState with gameboard, participants, hands, and event tracking
-  - Create unified Game State API for all state manipulation operations
+- [ ] 2.3 Create comprehensive Game State API implementation
+  - Implement GameStateAPI class with all state manipulation operations
   - Add access control methods for visibility and ownership validation
   - Implement utility functions for shuffling, card movement, and state updates
   - Add event tracking system that hooks into all API operations
-  - Implement game phase enumeration and transitions
+  - Create CardInPile and CardInPlacement helper functions
   - _Requirements: 4.1, 4.2, 4.4, 4.5, 6.1, 6.2, 6.5, 7.1, 7.2, 7.3_
 
-- [ ] 2.4 Write unit tests for data models
+- [ ] 2.4 Implement utility functions and helpers
+  - Create shuffling algorithms (Fisher-Yates shuffle)
+  - Implement access control validation utilities
+  - Add card movement and state update helpers
+  - Create CardInPile and CardInPlacement factory functions
+  - _Requirements: 7.1, 7.2, 7.3_
+
+- [ ] 2.5 Write unit tests for data models
   - Test card immutability and property access
   - Test participant management and hand assignment
   - Test card ownership tracking and transfer in piles and placements
@@ -43,10 +49,10 @@
   - _Requirements: 1.2, 1.4, 4.3, 4.4, 4.5, 6.3, 6.4_
 
 - [ ] 3. Build deck type system
-- [ ] 3.1 Implement DeckType interface with visual assets
-  - Create DeckType interface with faces, tails, and immutable cards definitions
-  - Implement CardDefinition interface for deck card specifications
+- [ ] 3.1 Implement base DeckType class with visual assets
+  - Create BaseDeckType abstract class implementing DeckType interface
   - Add deck creation methods that produce immutable cards
+  - Implement card validation logic
   - _Requirements: 1.1, 1.3, 1.4_
 
 - [ ] 3.2 Create standard 52-card playing deck implementation
@@ -68,11 +74,10 @@
   - _Requirements: 1.1, 1.2, 1.3_
 
 - [ ] 4. Implement ruleset system
-- [ ] 4.1 Create Ruleset interface with full game state access
-  - Define Ruleset interface with setup, gameloop, validate, and wincondition methods that receive GameState
-  - Implement GameLoopResult for automated progression control
-  - Create ValidationError and WinResult interfaces
-  - Update ParticipantAction interface to replace PlayerAction
+- [ ] 4.1 Create base Ruleset class implementation
+  - Create BaseRuleset abstract class implementing Ruleset interface
+  - Add common ruleset functionality and utilities
+  - Implement default validation and error handling
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
 - [ ] 4.2 Build gameloop execution system
@@ -100,7 +105,7 @@
   - Add detailed compatibility error reporting
   - _Requirements: 3.1, 3.2, 3.3, 3.5_
 
-- [ ] 5.2 Create compatibility error handling
+- [x] 5.2 Create compatibility error handling
   - Implement CompatibilityError and DeckMixingError types
   - Add specific error messages for deck type compatibility issues
   - Create error recovery suggestions

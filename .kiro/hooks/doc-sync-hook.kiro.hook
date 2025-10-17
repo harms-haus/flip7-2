@@ -1,0 +1,28 @@
+{
+  "enabled": true,
+  "name": "Documentation Sync",
+  "description": "Automatically checks and updates documentation when code files are modified to ensure documentation reflects current behavior",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.js",
+      "**/*.ts",
+      "**/*.py",
+      "**/*.java",
+      "**/*.cpp",
+      "**/*.c",
+      "**/*.go",
+      "**/*.rs",
+      "**/*.php",
+      "**/*.rb",
+      "**/*.cs",
+      "**/*.kt",
+      "**/*.swift"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A code file has been modified. Before completing any task, ensure that the documentation that describes the code you changed has been updated to reflect the change in behavior. If the behavior change is small and not explicitly described (incorrectly now) already, you can skip this step. Review the changes and update relevant documentation files (README.md, API docs, inline comments, etc.) to maintain accuracy."
+  }
+}

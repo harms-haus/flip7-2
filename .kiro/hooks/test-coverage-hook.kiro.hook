@@ -1,0 +1,26 @@
+{
+  "enabled": true,
+  "name": "Test Coverage Enforcer",
+  "description": "Monitors code file changes and ensures new code is covered by tests before completing tasks",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.js",
+      "**/*.ts",
+      "**/*.py",
+      "**/*.java",
+      "**/*.cpp",
+      "**/*.c",
+      "**/*.go",
+      "**/*.rs",
+      "**/*.php",
+      "**/*.rb",
+      "**/*.cs"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Code files have been modified. Before completing your current task, you must: 1) Verify that all new/modified code is covered by at least one test, 2) Run the test suite to ensure all tests pass, 3) Only then proceed to complete your task. Batch these verification steps efficiently near the end of your work."
+  }
+}
