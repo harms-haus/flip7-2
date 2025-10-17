@@ -10,7 +10,7 @@
   - Configure linting (ESLint) and formatting (Prettier)
   - _Requirements: 1.5, 2.1, 8.1, 8.2_
 
-- [ ] 2. Implement core data models and validation
+- [x] 2. Implement core data models and validation
 - [x] 2.1 Create immutable Card model with visual properties
   - Implement Card interface with face ID, tail ID, and static properties
   - Create CardOrientation enum for card positioning
@@ -33,7 +33,7 @@
   - Create CardInPile and CardInPlacement helper functions
   - _Requirements: 4.1, 4.2, 4.4, 4.5, 6.1, 6.2, 6.5, 7.1, 7.2, 7.3_
 
-- [ ] 2.4 Implement utility functions and helpers
+- [x] 2.4 Implement utility functions and helpers
   - Create shuffling algorithms (Fisher-Yates shuffle)
   - Implement access control validation utilities
   - Add card movement and state update helpers
@@ -143,15 +143,15 @@
   - Test game lifecycle management
   - _Requirements: 3.2, 4.1, 4.2_
 
-- [ ] 7. Build event system
-- [ ] 7.1 Implement event system core
+- [x] 7. Build event system
+- [x] 7.1 Implement event system core
   - Create event tracking system that hooks into Game State API operations
   - Define standard game events (ownership transfer, card flip, etc.)
   - Add custom event type support for rulesets
   - Implement event filtering and querying capabilities
   - _Requirements: 5.2, 5.3, 7.3, 7.4_
 
-- [ ] 7.2 Integrate events with game operations
+- [x] 7.2 Integrate events with game operations
   - Hook event tracking into all Game State API operations
   - Implement automatic event generation for state changes
   - Add access control validation with AccessDeniedError
