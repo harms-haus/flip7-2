@@ -40,7 +40,7 @@
   - Create CardInPile and CardInPlacement factory functions
   - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 2.5 Write unit tests for data models
+- [x] 2.5 Write unit tests for data models
   - Test card immutability and property access
   - Test participant management and hand assignment
   - Test card ownership tracking and transfer in piles and placements
