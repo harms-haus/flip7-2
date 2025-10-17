@@ -1,4 +1,4 @@
-// Utils barrel export - placeholder for future implementation
-// export * from './shuffling';
-// export * from './validation';
-// export * from './access-control';
+// Utils barrel export
+export * from './shuffling';
+export * from './access-control';
+export * from './card-helpers';

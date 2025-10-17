@@ -55,7 +55,7 @@ export class CardPile implements ICardPile {
    */
   public getTopCard(): CardInPile | null {
     if (this.isEmpty()) return null;
-    return this.isOrdered ? this.cards[this.cards.length - 1] : this.cards[0];
+    return this.isOrdered ? (this.cards[this.cards.length - 1] || null) : (this.cards[0] || null);
   }
 
   /**
@@ -63,7 +63,7 @@ export class CardPile implements ICardPile {
    */
   public getBottomCard(): CardInPile | null {
     if (this.isEmpty()) return null;
-    return this.isOrdered ? this.cards[0] : this.cards[this.cards.length - 1];
+    return this.isOrdered ? (this.cards[0] || null) : (this.cards[this.cards.length - 1] || null);
   }
 
   /**
