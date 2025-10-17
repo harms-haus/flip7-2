@@ -1,6 +1,15 @@
-// Main library entry point
+/**
+ * BigDeckEnergy - A flexible TypeScript card game library
+ * 
+ * Main library entry point providing the BigDeckEnergy class and all public APIs
+ * for creating card games by combining different rulesets with different deck types.
+ */
 
-// Export interfaces with 'I' prefix to avoid conflicts with model implementations
+// Export main library class
+export { BigDeckEnergy, BigDeckEnergyUtils } from './big-deck-energy';
+export type { BigDeckEnergyConfig } from './big-deck-energy';
+
+// Export core interfaces with 'I' prefix to avoid conflicts with model implementations
 export type {
   Card as ICard,
   CardDefinition,
@@ -14,24 +23,35 @@ export type {
   Participant as IParticipant
 } from './core/interfaces';
 
-// Export other interfaces without conflicts
+// Export other core interfaces without conflicts
 export * from './core/interfaces/deck-type';
 export * from './core/interfaces/ruleset';
 export * from './core/interfaces/events';
 export * from './core/interfaces/api';
 
-// Export types and errors
+// Export types and enums
 export * from './core/types';
+
+// Export error classes
 export * from './core/errors';
 
-// Export model implementations (these will have the same names as interfaces but are concrete classes)
+// Export model implementations (concrete classes)
 export * from './models';
 
-// Export API and utilities
+// Export Game State API
 export * from './api';
+
+// Export utility functions
 export * from './utils';
 
-// Only export from these modules if they have actual exports
+// Export engine components
 export * from './engine';
+
+// Export built-in deck types
 export * from './deck-types';
-// export * from './rulesets';
+
+// Export built-in rulesets
+export * from './rulesets';
+
+// Default export for convenience
+export { BigDeckEnergy as default } from './big-deck-energy';

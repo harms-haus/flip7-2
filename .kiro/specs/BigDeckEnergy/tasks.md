@@ -209,8 +209,8 @@
   - Test win conditions and game completion
   - _Requirements: 2.1, 2.2, 3.2_
 
-- [ ] 10. Build library API and utilities
-- [ ] 10.1 Create main library entry point and npm package configuration
+- [x] 10. Build library API and utilities
+- [x] 10.1 Create main library entry point and npm package configuration
   - Implement BigDeckEnergy main class as pure TypeScript library
   - Add factory methods for game creation with thread safety
   - Create utility functions for common operations
@@ -220,7 +220,7 @@
   - Add npm package metadata and keywords
   - _Requirements: 3.2, 8.1, 8.2, 8.4, 8.5_
 
-- [ ] 10.2 Add developer utilities and TypeScript support
+- [x] 10.2 Add developer utilities and TypeScript support
   - Create deck type and ruleset registration system with full type safety
   - Add validation utilities for custom implementations
   - Implement debugging and logging utilities
@@ -228,7 +228,7 @@
   - Add JSDoc comments for enhanced IntelliSense support
   - _Requirements: 1.5, 2.1, 8.1, 8.2_
 
-- [ ] 10.3 Write integration tests and prepare npm package
+- [x] 10.3 Write integration tests and prepare npm package
   - Test main library functionality with TypeScript compilation
   - Test factory methods and utilities
   - Test registration system

@@ -109,7 +109,7 @@ export class GameLoopEngine {
         const winResult = ruleset.wincondition(currentGameState);
         if (winResult.gameEnded) {
           // Transition to finished phase if not already there
-          if (currentGameState.phase !== GamePhase.FINISHED) {
+          if ((currentGameState.phase as GamePhase) !== GamePhase.FINISHED) {
             currentGameState = {
               ...currentGameState,
               phase: GamePhase.FINISHED

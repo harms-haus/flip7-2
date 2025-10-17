@@ -30,7 +30,7 @@
     "tests": "jest",
     "tests:watch": "jest --watch",
     "tests:coverage": "jest --coverage",
-    "prepublishOnly": "npm run build && npm run test"
+    "prepublishOnly": "npm run build && npm run tests"
   },
   "keywords": [
     "card-games",
@@ -39,10 +39,31 @@
     "deck",
     "ruleset",
     "cards",
-    "game-engine"
+    "game-engine",
+    "card-game-framework",
+    "playing-cards",
+    "game-development",
+    "nodejs",
+    "javascript",
+    "esm",
+    "commonjs",
+    "war",
+    "go-fish",
+    "monopoly",
+    "custom-cards",
+    "game-state",
+    "serialization"
   ],
-  "author": "",
+  "author": "BigDeckEnergy Contributors",
   "license": "MIT",
+  "homepage": "https://github.com/bigdeckenergy/big-deck-energy#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bigdeckenergy/big-deck-energy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bigdeckenergy/big-deck-energy/issues"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",

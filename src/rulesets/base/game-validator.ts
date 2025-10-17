@@ -558,8 +558,8 @@ export class GameValidator {
       message,
       severity,
       category,
-      context,
-      suggestedFix
+      ...(context && { context }),
+      ...(suggestedFix && { suggestedFix })
     };
   }
 
@@ -575,8 +575,8 @@ export class GameValidator {
     return {
       ...error,
       category,
-      context,
-      suggestedFix
+      ...(context && { context }),
+      ...(suggestedFix && { suggestedFix })
     };
   }
 
