@@ -98,8 +98,8 @@
   - Test game phase transitions
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 5. Build compatibility validation system
-- [ ] 5.1 Implement compatibility validator
+- [x] 5. Build compatibility validation system
+- [x] 5.1 Implement compatibility validator
   - Create compatibility checking logic for ruleset-defined deck types
   - Implement deck type mixing prevention
   - Add detailed compatibility error reporting
@@ -111,7 +111,7 @@
   - Create error recovery suggestions
   - _Requirements: 3.3, 3.5_
 
-- [ ] 5.3 Write unit tests for compatibility validation
+- [x] 5.3 Write unit tests for compatibility validation
   - Test valid and invalid ruleset-deck combinations
   - Test error message generation
   - Test capability requirement checking

@@ -32,6 +32,6 @@ export * from './api';
 export * from './utils';
 
 // Only export from these modules if they have actual exports
-// export * from './engine';
-// export * from './deck-types';
+export * from './engine';
+export * from './deck-types';
 // export * from './rulesets';
