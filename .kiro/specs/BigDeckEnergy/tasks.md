@@ -117,27 +117,27 @@
   - Test capability requirement checking
   - _Requirements: 3.1, 3.3, 3.5_
 
-- [ ] 6. Implement game instance management
-- [ ] 6.1 Create GameInstance class
+- [x] 6. Implement game instance management
+- [x] 6.1 Create GameInstance class
   - Implement game creation with compatibility validation
   - Add game state management and transitions
   - Create public API for game operations
   - _Requirements: 3.2, 4.1, 4.3_
 
-- [ ] 6.2 Build game lifecycle management
+- [x] 6.2 Build game lifecycle management
   - Implement game initialization with gameboard, participants, and hands
   - Add game state update mechanisms for piles, placements, ownership, and status
   - Create participant management and hand assignment logic
   - Create game completion and cleanup logic
   - _Requirements: 4.1, 4.2, 4.4, 4.5, 6.1, 6.2_
 
-- [ ] 6.3 Add participant action processing
+- [x] 6.3 Add participant action processing
   - Implement action validation through ruleset
   - Add action execution and state updates through Game State API
   - Create action history tracking through event system
   - _Requirements: 2.2, 7.3_
 
-- [ ] 6.4 Write unit tests for game instance management
+- [x] 6.4 Write unit tests for game instance management
   - Test game creation and initialization
   - Test action processing pipeline
   - Test game lifecycle management
