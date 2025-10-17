@@ -1,4 +1,4 @@
-// Deck types barrel export - placeholder for future implementation
-// export * from './base';
-// export * from './standard';
-// export * from './custom';
+// Deck types barrel export
+export * from './base/base-deck-type';
+export * from './standard/standard-playing-deck';
+export * from './custom/custom-deck-type';

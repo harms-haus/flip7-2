@@ -48,26 +48,26 @@
   - Test state derivation from gameboard and hands
   - _Requirements: 1.2, 1.4, 4.3, 4.4, 4.5, 6.3, 6.4_
 
-- [ ] 3. Build deck type system
-- [ ] 3.1 Implement base DeckType class with visual assets
+- [x] 3. Build deck type system
+- [x] 3.1 Implement base DeckType class with visual assets
   - Create BaseDeckType abstract class implementing DeckType interface
   - Add deck creation methods that produce immutable cards
   - Implement card validation logic
   - _Requirements: 1.1, 1.3, 1.4_
 
-- [ ] 3.2 Create standard 52-card playing deck implementation
+- [x] 3.2 Create standard 52-card playing deck implementation
   - Implement StandardPlayingDeck with suits and ranks
   - Define traditional card values and properties
   - Add standard deck capabilities (SUITS, RANKS, NUMERIC_VALUES)
   - _Requirements: 1.1_
 
-- [ ] 3.3 Build custom deck template system
+- [x] 3.3 Build custom deck template system
   - Create CustomDeckType for developer-defined decks
   - Implement runtime card property validation
   - Add support for special abilities and custom properties
   - _Requirements: 1.2, 1.3, 5.1_
 
-- [ ] 3.4 Write unit tests for deck types
+- [x] 3.4 Write unit tests for deck types
   - Test standard deck creation and validation
   - Test custom deck property handling
   - Test deck capability reporting
