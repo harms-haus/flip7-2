@@ -158,27 +158,27 @@
   - Create visibility enforcement for face-down cards
   - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 7.3 Write unit tests for event system
+- [x] 7.3 Write unit tests for event system
   - Test event publishing and subscription
   - Test event handler execution
   - Test custom event types
   - _Requirements: 5.2, 5.3_
 
-- [ ] 8. Implement serialization system
-- [ ] 8.1 Create serialization engine
+- [x] 8. Implement serialization system
+- [x] 8.1 Create serialization engine
   - Implement game state serialization to JSON including participants, hands, and events
   - Add custom property serialization support
   - Create deserialization with validation and participant-hand relationship restoration
   - Ensure thread-safe serialization operations
   - _Requirements: 6.3, 8.2, 8.4_
 
-- [ ] 8.2 Add versioning and compatibility
+- [x] 8.2 Add versioning and compatibility
   - Implement serialization versioning
   - Add backward compatibility support
   - Create migration system for old save formats
   - _Requirements: 4.4_
 
-- [ ] 8.3 Write unit tests for serialization
+- [x] 8.3 Write unit tests for serialization
   - Test serialization round-trips
   - Test custom property handling
   - Test version compatibility

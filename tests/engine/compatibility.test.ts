@@ -1,4 +1,4 @@
-import { CompatibilityValidator, CompatibilityResult, GameInstanceConfig } from '../../src/engine/compatibility';
+import { CompatibilityValidator, CompatibilityResult, GameValidationConfig } from '../../src/engine/compatibility';
 import { Ruleset, GameLoopResult, ValidationError, WinResult } from '../../src/core/interfaces/ruleset';
 import { DeckType } from '../../src/core/interfaces/deck-type';
 import { GameState } from '../../src/core/interfaces/game-state';
@@ -188,7 +188,7 @@ describe('CompatibilityValidator', () => {
 
   describe('validateGameInstance', () => {
     it('should validate compatible game instance configuration', () => {
-      const config: GameInstanceConfig = {
+      const config: GameValidationConfig = {
         ruleset: standardRuleset,
         deckType: standardDeck,
         existingDeckTypes: []
@@ -202,7 +202,7 @@ describe('CompatibilityValidator', () => {
     });
 
     it('should fail validation for incompatible ruleset-deck combination', () => {
-      const config: GameInstanceConfig = {
+      const config: GameValidationConfig = {
         ruleset: standardRuleset,
         deckType: customDeck,
         existingDeckTypes: []
@@ -215,7 +215,7 @@ describe('CompatibilityValidator', () => {
     });
 
     it('should fail validation for deck mixing', () => {
-      const config: GameInstanceConfig = {
+      const config: GameValidationConfig = {
         ruleset: multiCompatibleRuleset,
         deckType: customDeck,
         existingDeckTypes: ['standard-playing-deck']
@@ -228,7 +228,7 @@ describe('CompatibilityValidator', () => {
     });
 
     it('should validate when no existing deck types are provided', () => {
-      const config: GameInstanceConfig = {
+      const config: GameValidationConfig = {
         ruleset: standardRuleset,
         deckType: standardDeck
       };

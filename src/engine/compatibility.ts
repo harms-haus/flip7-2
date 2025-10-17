@@ -20,7 +20,7 @@ export interface CompatibilityResult {
 /**
  * Configuration for game instance validation
  */
-export interface GameInstanceConfig {
+export interface GameValidationConfig {
   /** Ruleset to validate */
   ruleset: Ruleset;
   
@@ -131,7 +131,7 @@ export class CompatibilityValidator {
    * @param config Game instance configuration to validate
    * @returns Compatibility result
    */
-  public static validateGameInstance(config: GameInstanceConfig): CompatibilityResult {
+  public static validateGameInstance(config: GameValidationConfig): CompatibilityResult {
     const messages: string[] = [];
     
     // First validate ruleset-deck compatibility

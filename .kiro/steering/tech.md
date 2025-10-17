@@ -43,10 +43,10 @@ npm run format       # Prettier formatting
 
 ### Testing
 ```bash
-npm test             # Run all tests
-npm run test:unit    # Unit tests only
-npm run test:integration  # Integration tests
-npm run test:coverage     # Test coverage report
+npm tests             # Run all tests
+npm run tests:unit    # Unit tests only
+npm run tests:integration  # Integration tests
+npm run tests:coverage     # Test coverage report
 ```
 
 ### Package Management
