@@ -184,26 +184,26 @@
   - Test version compatibility
   - _Requirements: 4.4_
 
-- [ ] 9. Create example implementations
-- [ ] 9.1 Implement War card game ruleset
+- [x] 9. Create example implementations
+- [x] 9.1 Implement War card game ruleset
   - Create simple War game rules as reference implementation
   - Demonstrate basic ruleset functionality
   - Add win condition and scoring logic
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 9.2 Implement Go Fish card game ruleset
+- [x] 9.2 Implement Go Fish card game ruleset
   - Create Go Fish rules with player interaction
   - Demonstrate multi-player game mechanics
   - Add card matching and collection logic
   - _Requirements: 2.1, 2.2, 2.4_
 
-- [ ] 9.3 Create custom deck example (Monopoly-style)
+- [x] 9.3 Create custom deck example (Monopoly-style)
   - Implement property card deck type
   - Demonstrate custom card properties and behaviors
   - Add special card abilities
   - _Requirements: 1.2, 1.3, 5.1_
 
-- [ ] 9.4 Write integration tests for example games
+- [x] 9.4 Write integration tests for example games
   - Test complete game scenarios
   - Test ruleset-deck combinations
   - Test win conditions and game completion

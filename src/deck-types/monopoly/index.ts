@@ -1,0 +1,1 @@
+export { MonopolyPropertyDeck } from './monopoly-property-deck';
