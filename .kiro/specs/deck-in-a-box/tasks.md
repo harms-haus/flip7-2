@@ -26,20 +26,20 @@
     - Test graceful degradation scenarios
     - _Requirements: 3.5_
 
-- [ ] 3. Create CLI application shell and command-line interface
-  - [ ] 3.1 Implement main CLI entry point with Commander.js
+- [x] 3. Create CLI application shell and command-line interface
+  - [x] 3.1 Implement main CLI entry point with Commander.js
     - Set up command-line argument parsing for game selection and options
     - Create help text and version information display
     - Handle non-interactive mode detection and appropriate fallbacks
     - _Requirements: 1.1, 1.4_
 
-  - [ ] 3.2 Build application shell with Ink framework
+  - [x] 3.2 Build application shell with Ink framework
     - Create main App component with screen routing (menu/game/loading/error)
     - Implement global error boundary for graceful error handling
     - Set up application state management with React hooks
     - _Requirements: 1.1, 1.3_
 
-  - [ ] 3.3 Add CLI integration tests
+  - [x] 3.3 Add CLI integration tests
     - Test command-line argument parsing and validation
     - Test application startup in different terminal environments
     - Test error handling for invalid arguments

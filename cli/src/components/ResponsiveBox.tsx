@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, BoxProps } from 'ink';
 import { useResponsiveLayout, useAreaDimensions } from '../utils/layout-calculator';
-import { LayoutConfiguration, CalculatedArea } from '../types';
+import { LayoutConfiguration } from '../types';
 
 /**
  * Props for ResponsiveBox component.
@@ -21,6 +21,9 @@ export interface ResponsiveBoxProps extends Omit<BoxProps, 'width' | 'height'> {
   
   /** Whether to hide when area is not visible */
   hideWhenInvisible?: boolean;
+  
+  /** Child elements */
+  children?: React.ReactNode;
 }
 
 /**
@@ -92,6 +95,9 @@ export interface ResponsiveContainerProps extends BoxProps {
   
   /** Whether to show layout warnings */
   showWarnings?: boolean;
+  
+  /** Child elements */
+  children?: React.ReactNode;
 }
 
 /**

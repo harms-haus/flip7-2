@@ -72,6 +72,9 @@ export interface ApplicationSettings {
   /** Whether to use Unicode characters */
   useUnicode: boolean;
   
+  /** Color theme to use */
+  theme: string;
+  
   /** Default save directory for game files */
   saveDirectory: string;
   
