@@ -4,6 +4,8 @@ import { ApplicationState, ApplicationScreen } from '../types';
 import { detectTerminalCapabilities } from '../utils/terminal-detection';
 import { discoverGames } from '../utils/game-discovery';
 import { ErrorBoundary } from './ErrorBoundary';
+import { MainMenu } from './MainMenu';
+import { GameSetup } from './GameSetup';
 
 interface AppProps {
   debugMode: boolean;
@@ -170,11 +172,40 @@ export const App: React.FC<AppProps> = ({
 
       case 'menu':
         return (
-          <MenuScreen 
+          <MainMenu 
             games={appState.availableGames}
             settings={appState.settings}
             terminalSize={appState.terminalSize}
-            onGameSelect={(game) => navigateToScreen('game', { selectedGame: game })}
+            onGameSelect={(game) => navigateToScreen('setup', { selectedGame: game })}
+            onLoadGame={() => {
+              // TODO: Implement load game functionality in future tasks
+              showError('Load game functionality will be implemented in future tasks');
+            }}
+            onSettings={() => {
+              // TODO: Implement settings screen in future tasks
+              showError('Settings functionality will be implemented in future tasks');
+            }}
+            onExit={() => exit()}
+            onError={showError}
+          />
+        );
+
+      case 'setup':
+        return (
+          <GameSetup
+            game={appState.selectedGame!}
+            settings={appState.settings}
+            terminalSize={appState.terminalSize}
+            onSetupComplete={(setupResult) => {
+              // TODO: Initialize game instance with setup result
+              // For now, just navigate to game screen
+              setAppState(prev => ({
+                ...prev,
+                players: setupResult.players,
+              }));
+              navigateToScreen('game');
+            }}
+            onCancel={() => navigateToScreen('menu')}
             onError={showError}
           />
         );
@@ -256,43 +287,7 @@ const ErrorScreen: React.FC<ErrorScreenProps> = ({ message }) => (
   </Box>
 );
 
-interface MenuScreenProps {
-  games: any[];
-  settings: any;
-  terminalSize: { width: number; height: number };
-  onGameSelect: (game: any) => void;
-  onError: (message: string) => void;
-}
 
-const MenuScreen: React.FC<MenuScreenProps> = ({ games }) => (
-  <Box flexDirection="column">
-    <Box marginBottom={1}>
-      <Text bold>🎴 DeckInABox - Card Game Terminal</Text>
-    </Box>
-    
-    <Box marginBottom={1}>
-      <Text dimColor>Available games: {games.length}</Text>
-    </Box>
-    
-    {games.length === 0 ? (
-      <Box flexDirection="column">
-        <Text color="yellow">⚠️  No games found.</Text>
-        <Text dimColor>Make sure game configurations are installed in the games directory.</Text>
-        <Text dimColor>Run 'deck-in-a-box --help' for more information.</Text>
-      </Box>
-    ) : (
-      <Box flexDirection="column">
-        <Text dimColor>Game selection interface will be implemented in future tasks...</Text>
-        <Text dimColor>Available games:</Text>
-        {games.slice(0, 5).map((game) => (
-          <Text key={game.gameId} dimColor>
-            • {game.displayName} ({game.gameId})
-          </Text>
-        ))}
-      </Box>
-    )}
-  </Box>
-);
 
 interface GameScreenProps {
   game: any;

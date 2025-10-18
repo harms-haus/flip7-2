@@ -70,20 +70,20 @@
     - Test UIAdapter utility methods
     - _Requirements: 6.5_
 
-- [ ] 5. Build main menu interface and game selection
-  - [ ] 5.1 Create main menu component
+- [x] 5. Build main menu interface and game selection
+  - [x] 5.1 Create main menu component
     - Build game selection list with keyboard navigation
     - Implement game description display and filtering options
     - Add save/load game options and recent games list
     - _Requirements: 1.1, 1.2, 5.1_
 
-  - [ ] 5.2 Implement game setup flow
+  - [x] 5.2 Implement game setup flow
     - Create player configuration interface using GameConfiguration.setupGame()
     - Build player name input and count validation
     - Implement game options configuration with validation
     - _Requirements: 2.2, 2.3, 2.4_
 
-  - [ ] 5.3 Add menu navigation tests
+  - [x] 5.3 Add menu navigation tests
     - Test keyboard navigation and game selection
     - Test player setup flow with various configurations
     - Test input validation and error handling

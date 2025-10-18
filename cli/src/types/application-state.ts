@@ -4,7 +4,7 @@ import { GameConfiguration } from './game-configuration';
 /**
  * Possible screens in the application.
  */
-export type ApplicationScreen = 'menu' | 'game' | 'loading' | 'error';
+export type ApplicationScreen = 'menu' | 'setup' | 'game' | 'loading' | 'error';
 
 /**
  * Game phases during gameplay.
