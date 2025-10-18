@@ -299,3 +299,85 @@
   - Test migration from old to new serialization formats
   - Test performance with large game histories
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
+
+- [x] 13. Implement party system core interfaces and models
+- [x] 13.1 Create Party interface and data model
+  - Implement Party interface with id, name, participantIds, piles, placements, and status
+  - Add party support to GameState interface with parties Map
+  - Update Participant interface to include partyId field
+  - Create party-related type definitions and enums
+  - _Requirements: 10.1, 10.2, 10.4_
+
+- [x] 13.2 Update Game State API for party management
+  - Add party creation and management methods to GameStateAPI
+  - Implement createParty, createPartyPile, addCardToPartyPile methods
+  - Add setPartyPlacement, getPartyPlacement, updatePartyStatus methods
+  - Update participant management to support party membership
+  - Add addParticipantToParty and removeParticipantFromParty methods
+  - _Requirements: 10.1, 10.2, 10.4_
+
+- [x] 13.3 Implement party access control and visibility
+  - Update access control methods to support party locations
+  - Implement party member validation for resource access
+  - Update canAccessPile and canAccessPlacement for party resources
+  - Ensure face-down card visibility rules apply to party piles
+  - Add party-specific visibility validation
+  - _Requirements: 10.1, 10.4_
+
+- [x] 13.4 Update utility functions for party support
+  - Modify shufflePile to support party locations with locationId parameter
+  - Update moveCard to handle party-to-party and party-to-hand transfers
+  - Add party-specific card movement validation
+  - Update getVisibleCards to support party pile access
+  - _Requirements: 10.1, 10.4_
+
+- [x] 13.5 Write unit tests for party system
+  - Test party creation and participant assignment
+  - Test party pile and placement management
+  - Test access control for party resources
+  - Test card movement between parties and other locations
+  - Test party status management and updates
+  - _Requirements: 10.1, 10.2, 10.4, 10.5_
+
+- [ ] 14. Integrate party system with existing components
+- [ ] 14.1 Update serialization system for parties
+  - Add party serialization to game state JSON export
+  - Update deserialization to restore party structures
+  - Ensure party data is included in state snapshots
+  - Add party information to action descriptors
+  - _Requirements: 10.1, 10.5_
+
+- [ ] 14.2 Update event system for party operations
+  - Add party-specific event types for tracking party operations
+  - Implement automatic event generation for party state changes
+  - Update event filtering to support party-related events
+  - Add party membership change events
+  - _Requirements: 10.1, 10.5_
+
+- [ ] 14.3 Update Game Instance for party support
+  - Modify GameInstance class to handle party initialization
+  - Add party management to game lifecycle operations
+  - Update game state validation to include party consistency checks
+  - Ensure party cleanup on game completion
+  - _Requirements: 10.1, 10.4, 10.5_
+
+- [ ] 14.4 Write integration tests for party system
+  - Test complete game scenarios with party-based teams
+  - Test party serialization and deserialization
+  - Test party event tracking and history
+  - Test party compatibility with existing rulesets
+  - _Requirements: 10.1, 10.2, 10.4, 10.5_
+
+- [ ] 15. Create party system examples and documentation
+- [ ] 15.1 Implement team-based card game example
+  - Create a simple team-based card game ruleset using parties
+  - Demonstrate party resource sharing and team mechanics
+  - Show party status tracking and team win conditions
+  - _Requirements: 10.1, 10.2, 10.5_
+
+- [ ] 15.2 Update library documentation for party system
+  - Add party system documentation to README
+  - Create API documentation for party-related methods
+  - Add examples of party usage in different game scenarios
+  - Document party access control and visibility rules
+  - _Requirements: 10.1, 10.5_

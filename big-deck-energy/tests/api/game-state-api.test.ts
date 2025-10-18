@@ -16,6 +16,7 @@ describe('GameStateAPI', () => {
       new Gameboard(),
       new Map(),
       new Map(),
+      new Map(),
       [],
       {}
     );

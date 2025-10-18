@@ -8,6 +8,7 @@ export class Participant implements IParticipant {
   public readonly name: string;
   public readonly isNPC: boolean;
   public readonly handIds: string[];
+  public readonly partyId: string | null;
   public readonly status: Record<string, any>;
 
   constructor(
@@ -15,12 +16,14 @@ export class Participant implements IParticipant {
     name: string,
     isNPC: boolean = false,
     handIds: string[] = [],
+    partyId: string | null = null,
     status: Record<string, any> = {}
   ) {
     this.id = id;
     this.name = name;
     this.isNPC = isNPC;
     this.handIds = [...handIds]; // Create a copy
+    this.partyId = partyId;
     this.status = Object.freeze({ ...status });
     
     // Freeze the instance
@@ -57,17 +60,38 @@ export class Participant implements IParticipant {
   }
 
   /**
+   * Check if this participant belongs to a party
+   */
+  public isInParty(): boolean {
+    return this.partyId !== null;
+  }
+
+  /**
+   * Check if this participant belongs to a specific party
+   */
+  public belongsToParty(partyId: string): boolean {
+    return this.partyId === partyId;
+  }
+
+  /**
    * Create a new participant with updated hand IDs
    */
   public withHandIds(handIds: string[]): Participant {
-    return new Participant(this.id, this.name, this.isNPC, handIds, this.status);
+    return new Participant(this.id, this.name, this.isNPC, handIds, this.partyId, this.status);
+  }
+
+  /**
+   * Create a new participant with updated party ID
+   */
+  public withPartyId(partyId: string | null): Participant {
+    return new Participant(this.id, this.name, this.isNPC, this.handIds, partyId, this.status);
   }
 
   /**
    * Create a new participant with updated status
    */
   public withStatus(status: Record<string, any>): Participant {
-    return new Participant(this.id, this.name, this.isNPC, this.handIds, status);
+    return new Participant(this.id, this.name, this.isNPC, this.handIds, this.partyId, status);
   }
 
   /**

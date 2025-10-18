@@ -3,6 +3,7 @@ import { GameState } from '../core/interfaces/game-state';
 import { GameEvent, EventFilter } from '../core/interfaces/events';
 import { GameStateSnapshot, ActionDescriptor, GameHistory } from '../core/interfaces/history';
 import { Participant } from '../core/interfaces/participant';
+import { Party } from '../core/interfaces/party';
 import { Card } from '../core/interfaces/card';
 import { CardInPile, CardInPlacement } from '../core/interfaces/gameboard';
 import { CardOrientation } from '../core/types';
@@ -21,6 +22,7 @@ import {
   canParticipantAccessHand
 } from '../utils/access-control';
 import { Participant as ParticipantModel } from '../models/participant';
+import { Party as PartyModel } from '../models/party';
 import { Hand } from '../models/hand';
 import { Gameboard, CardPile, CardPlacement } from '../models/gameboard';
 import { HistoryManager } from '../engine/history-manager';
@@ -186,8 +188,400 @@ export class GameStateAPIImpl implements GameStateAPI {
     });
   }
 
+  public addParticipantToParty(participantId: string, partyId: string): void {
+    const participant = this.gameState.participants.get(participantId);
+    if (!participant) {
+      throw new Error(`Participant '${participantId}' not found`);
+    }
+
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      throw new Error(`Party '${partyId}' not found`);
+    }
+
+    // Remove participant from current party if they're in one
+    if (participant.partyId) {
+      this.removeParticipantFromParty(participantId);
+    }
+
+    // Update participant with new party ID
+    const updatedParticipant = (participant as ParticipantModel).withPartyId(partyId);
+    const newParticipants = new Map(this.gameState.participants);
+    newParticipants.set(participantId, updatedParticipant);
+
+    // Add participant to party
+    const newParticipantIds = [...party.participantIds, participantId];
+    const updatedParty = (party as PartyModel).withParticipantIds(newParticipantIds);
+    const newParties = new Map(this.gameState.parties);
+    newParties.set(partyId, updatedParty);
+
+    this.gameState = {
+      ...this.gameState,
+      participants: newParticipants,
+      parties: newParties
+    };
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'participant_added_to_party',
+      timestamp: Date.now(),
+      participantId,
+      data: { partyId }
+    });
+
+    this.createSnapshotForAction(
+      'participant_added_to_party',
+      `Added participant '${participantId}' to party '${partyId}'`,
+      participantId,
+      { partyId }
+    );
+  }
+
+  public removeParticipantFromParty(participantId: string): void {
+    const participant = this.gameState.participants.get(participantId);
+    if (!participant) {
+      throw new Error(`Participant '${participantId}' not found`);
+    }
+
+    if (!participant.partyId) {
+      return; // Participant is not in a party
+    }
+
+    const party = this.gameState.parties.get(participant.partyId);
+    if (party) {
+      // Remove participant from party
+      const newParticipantIds = party.participantIds.filter(id => id !== participantId);
+      const updatedParty = (party as PartyModel).withParticipantIds(newParticipantIds);
+      const newParties = new Map(this.gameState.parties);
+      newParties.set(participant.partyId, updatedParty);
+
+      this.gameState = {
+        ...this.gameState,
+        parties: newParties
+      };
+    }
+
+    // Update participant to remove party ID
+    const updatedParticipant = (participant as ParticipantModel).withPartyId(null);
+    const newParticipants = new Map(this.gameState.participants);
+    newParticipants.set(participantId, updatedParticipant);
+
+    this.gameState = {
+      ...this.gameState,
+      participants: newParticipants
+    };
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'participant_removed_from_party',
+      timestamp: Date.now(),
+      participantId,
+      data: { partyId: participant.partyId }
+    });
+
+    this.createSnapshotForAction(
+      'participant_removed_from_party',
+      `Removed participant '${participantId}' from party '${participant.partyId}'`,
+      participantId,
+      { partyId: participant.partyId }
+    );
+  }
+
   public getParticipant(participantId: string): Participant | null {
     return this.gameState.participants.get(participantId) || null;
+  }
+
+  // ===== PARTY MANAGEMENT =====
+
+  public createParty(id: string, name: string): void {
+    if (this.gameState.parties.has(id)) {
+      throw new Error(`Party with ID '${id}' already exists`);
+    }
+
+    const party = new PartyModel(id, name);
+    const newParties = new Map(this.gameState.parties);
+    newParties.set(id, party);
+
+    this.gameState = {
+      ...this.gameState,
+      parties: newParties
+    };
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'party_created',
+      timestamp: Date.now(),
+      data: { partyId: id, name }
+    });
+
+    this.createSnapshotForAction(
+      'party_created',
+      `Created party '${name}' with ID '${id}'`,
+      undefined,
+      { partyId: id, name }
+    );
+  }
+
+  public createPartyPile(partyId: string, pileName: string, isOrdered: boolean, orientation?: CardOrientation): void {
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      throw new Error(`Party '${partyId}' not found`);
+    }
+
+    if (party.piles.has(pileName)) {
+      throw new Error(`Pile '${pileName}' already exists in party '${partyId}'`);
+    }
+
+    const pile = new CardPile(
+      pileName,
+      [],
+      isOrdered,
+      orientation || CardOrientation.NORMAL
+    );
+
+    const newPiles = new Map(party.piles as Map<string, CardPile>);
+    newPiles.set(pileName, pile);
+    const updatedParty = (party as PartyModel).withPiles(newPiles);
+
+    const newParties = new Map(this.gameState.parties);
+    newParties.set(partyId, updatedParty);
+
+    this.gameState = {
+      ...this.gameState,
+      parties: newParties
+    };
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'party_pile_created',
+      timestamp: Date.now(),
+      data: { partyId, pileName, isOrdered, orientation }
+    });
+  }
+
+  public addCardToPartyPile(
+    partyId: string,
+    pileName: string,
+    card: Card,
+    faceUp: boolean,
+    owner?: string,
+    orientation?: CardOrientation,
+    status?: Record<string, any>
+  ): void {
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      throw new Error(`Party '${partyId}' not found`);
+    }
+
+    const pile = party.piles.get(pileName) as CardPile;
+    if (!pile) {
+      throw new Error(`Pile '${pileName}' not found in party '${partyId}'`);
+    }
+
+    const cardInPile = createCardInPile(
+      card,
+      faceUp,
+      owner || null,
+      orientation || pile.orientation,
+      status || {}
+    );
+
+    const newCards = [...pile.cards, cardInPile];
+    const updatedPile = pile.withCards(newCards);
+
+    const newPiles = new Map(party.piles as Map<string, CardPile>);
+    newPiles.set(pileName, updatedPile);
+    const updatedParty = (party as PartyModel).withPiles(newPiles);
+
+    const newParties = new Map(this.gameState.parties);
+    newParties.set(partyId, updatedParty);
+
+    this.gameState = {
+      ...this.gameState,
+      parties: newParties
+    };
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'card_added_to_party_pile',
+      timestamp: Date.now(),
+      data: { partyId, pileName, cardId: card.id, faceUp, owner: cardInPile.owner }
+    });
+
+    this.createSnapshotForAction(
+      'card_added_to_party_pile',
+      `Added card ${card.id} to party pile ${pileName}`,
+      undefined,
+      { partyId, pileName, cardId: card.id, faceUp, owner: cardInPile.owner }
+    );
+  }
+
+  public removeCardFromPartyPile(partyId: string, pileName: string, index?: number): CardInPile | null {
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      throw new Error(`Party '${partyId}' not found`);
+    }
+
+    const pile = party.piles.get(pileName) as CardPile;
+    if (!pile) {
+      throw new Error(`Pile '${pileName}' not found in party '${partyId}'`);
+    }
+
+    if (pile.isEmpty()) {
+      return null;
+    }
+
+    const cardIndex = index !== undefined ? index : pile.cards.length - 1;
+    if (cardIndex < 0 || cardIndex >= pile.cards.length) {
+      throw new Error(`Invalid card index ${cardIndex} for pile '${pileName}'`);
+    }
+
+    const removedCard = pile.cards[cardIndex];
+    if (!removedCard) {
+      return null;
+    }
+
+    const newCards = pile.cards.filter((_, i) => i !== cardIndex);
+    const updatedPile = pile.withCards(newCards);
+
+    const newPiles = new Map(party.piles as Map<string, CardPile>);
+    newPiles.set(pileName, updatedPile);
+    const updatedParty = (party as PartyModel).withPiles(newPiles);
+
+    const newParties = new Map(this.gameState.parties);
+    newParties.set(partyId, updatedParty);
+
+    this.gameState = {
+      ...this.gameState,
+      parties: newParties
+    };
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'card_removed_from_party_pile',
+      timestamp: Date.now(),
+      data: { partyId, pileName, cardId: removedCard.card.id, index: cardIndex }
+    });
+
+    return removedCard;
+  }
+
+  public setPartyPlacement(
+    partyId: string,
+    placementName: string,
+    card: Card | null,
+    faceUp?: boolean,
+    owner?: string,
+    orientation?: CardOrientation,
+    status?: Record<string, any>
+  ): void {
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      throw new Error(`Party '${partyId}' not found`);
+    }
+
+    const placement = party.placements.get(placementName) as CardPlacement;
+
+    if (!placement) {
+      // Create new placement if it doesn't exist
+      const newPlacement = new CardPlacement(
+        placementName,
+        card ? createCardInPlacement(
+          card,
+          faceUp ?? true,
+          owner || null,
+          orientation || CardOrientation.NORMAL,
+          status || {}
+        ) : null
+      );
+
+      const newPlacements = new Map(party.placements as Map<string, CardPlacement>);
+      newPlacements.set(placementName, newPlacement);
+      const updatedParty = (party as PartyModel).withPlacements(newPlacements);
+
+      const newParties = new Map(this.gameState.parties);
+      newParties.set(partyId, updatedParty);
+
+      this.gameState = {
+        ...this.gameState,
+        parties: newParties
+      };
+    } else {
+      const cardInPlacement = card ? createCardInPlacement(
+        card,
+        faceUp ?? true,
+        owner || null,
+        orientation || placement.orientation,
+        status || {}
+      ) : null;
+
+      const updatedPlacement = placement.withCard(cardInPlacement);
+
+      const newPlacements = new Map(party.placements as Map<string, CardPlacement>);
+      newPlacements.set(placementName, updatedPlacement);
+      const updatedParty = (party as PartyModel).withPlacements(newPlacements);
+
+      const newParties = new Map(this.gameState.parties);
+      newParties.set(partyId, updatedParty);
+
+      this.gameState = {
+        ...this.gameState,
+        parties: newParties
+      };
+    }
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'party_placement_set',
+      timestamp: Date.now(),
+      data: { partyId, placementName, cardId: card?.id || null, faceUp }
+    });
+  }
+
+  public getPartyPlacement(partyId: string, placementName: string): CardInPlacement | null {
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      throw new Error(`Party '${partyId}' not found`);
+    }
+
+    const placement = party.placements.get(placementName);
+    return placement?.card || null;
+  }
+
+  public updatePartyStatus(partyId: string, key: string, value: any): void {
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      throw new Error(`Party '${partyId}' not found`);
+    }
+
+    const newStatus = { ...party.status, [key]: value };
+    const updatedParty = (party as PartyModel).withStatus(newStatus);
+
+    const newParties = new Map(this.gameState.parties);
+    newParties.set(partyId, updatedParty);
+
+    this.gameState = {
+      ...this.gameState,
+      parties: newParties
+    };
+
+    this.addEvent({
+      id: this.generateEventId(),
+      type: 'party_status_updated',
+      timestamp: Date.now(),
+      data: { partyId, key, value }
+    });
+
+    this.createSnapshotForAction(
+      'party_status_updated',
+      `Updated party '${partyId}' status: ${key} = ${value}`,
+      undefined,
+      { partyId, key, value }
+    );
+  }
+
+  public getParty(partyId: string): Party | null {
+    return this.gameState.parties.get(partyId) || null;
   }
 
   // ===== HAND MANAGEMENT =====
@@ -680,10 +1074,10 @@ export class GameStateAPIImpl implements GameStateAPI {
 
   // ===== CARD STATE MANAGEMENT =====
 
-  public updateCardInPileStatus(location: 'gameboard' | string, pileName: string, cardIndex: number, key: string, value: any): void {
-    const pile = this.getPileFromLocation(location, pileName);
+  public updateCardInPileStatus(location: 'gameboard' | 'party' | string, pileName: string, cardIndex: number, key: string, value: any, locationId?: string): void {
+    const pile = this.getPileFromLocation(location, pileName, locationId);
     if (!pile) {
-      throw new Error(`Pile '${pileName}' not found in location '${location}'`);
+      throw new Error(`Pile '${pileName}' not found in location '${location}'${locationId ? ` (${locationId})` : ''}`);
     }
 
     if (cardIndex < 0 || cardIndex >= pile.cards.length) {
@@ -701,7 +1095,7 @@ export class GameStateAPIImpl implements GameStateAPI {
     newCards[cardIndex] = updatedCard;
     const updatedPile = pile.withCards(newCards);
 
-    this.updatePileInLocation(location, pileName, updatedPile);
+    this.updatePileInLocation(location, pileName, updatedPile, locationId);
 
     this.addEvent({
       id: this.generateEventId(),
@@ -711,10 +1105,10 @@ export class GameStateAPIImpl implements GameStateAPI {
     });
   }
 
-  public updateCardInPlacementStatus(location: 'gameboard' | string, placementName: string, key: string, value: any): void {
-    const placement = this.getPlacementFromLocation(location, placementName);
+  public updateCardInPlacementStatus(location: 'gameboard' | 'party' | string, placementName: string, key: string, value: any, locationId?: string): void {
+    const placement = this.getPlacementFromLocation(location, placementName, locationId);
     if (!placement) {
-      throw new Error(`Placement '${placementName}' not found in location '${location}'`);
+      throw new Error(`Placement '${placementName}' not found in location '${location}'${locationId ? ` (${locationId})` : ''}`);
     }
 
     if (!placement.card) {
@@ -725,7 +1119,7 @@ export class GameStateAPIImpl implements GameStateAPI {
     const updatedCard = updateCardInPlacement(placement.card, { status: newStatus });
     const updatedPlacement = placement.withCard(updatedCard);
 
-    this.updatePlacementInLocation(location, placementName, updatedPlacement);
+    this.updatePlacementInLocation(location, placementName, updatedPlacement, locationId);
 
     this.addEvent({
       id: this.generateEventId(),
@@ -735,10 +1129,10 @@ export class GameStateAPIImpl implements GameStateAPI {
     });
   }
 
-  public updateCardOwnership(location: 'gameboard' | string, pileName: string, cardIndex: number, newOwner: string | null): void {
-    const pile = this.getPileFromLocation(location, pileName);
+  public updateCardOwnership(location: 'gameboard' | 'party' | string, pileName: string, cardIndex: number, newOwner: string | null, locationId?: string): void {
+    const pile = this.getPileFromLocation(location, pileName, locationId);
     if (!pile) {
-      throw new Error(`Pile '${pileName}' not found in location '${location}'`);
+      throw new Error(`Pile '${pileName}' not found in location '${location}'${locationId ? ` (${locationId})` : ''}`);
     }
 
     if (cardIndex < 0 || cardIndex >= pile.cards.length) {
@@ -755,7 +1149,7 @@ export class GameStateAPIImpl implements GameStateAPI {
     newCards[cardIndex] = updatedCard;
     const updatedPile = pile.withCards(newCards);
 
-    this.updatePileInLocation(location, pileName, updatedPile);
+    this.updatePileInLocation(location, pileName, updatedPile, locationId);
 
     this.addEvent({
       id: this.generateEventId(),
@@ -772,10 +1166,10 @@ export class GameStateAPIImpl implements GameStateAPI {
     });
   }
 
-  public flipCard(location: 'gameboard' | string, pileName: string, cardIndex: number, faceUp: boolean): void {
-    const pile = this.getPileFromLocation(location, pileName);
+  public flipCard(location: 'gameboard' | 'party' | string, pileName: string, cardIndex: number, faceUp: boolean, locationId?: string): void {
+    const pile = this.getPileFromLocation(location, pileName, locationId);
     if (!pile) {
-      throw new Error(`Pile '${pileName}' not found in location '${location}'`);
+      throw new Error(`Pile '${pileName}' not found in location '${location}'${locationId ? ` (${locationId})` : ''}`);
     }
 
     if (cardIndex < 0 || cardIndex >= pile.cards.length) {
@@ -792,7 +1186,7 @@ export class GameStateAPIImpl implements GameStateAPI {
     newCards[cardIndex] = updatedCard;
     const updatedPile = pile.withCards(newCards);
 
-    this.updatePileInLocation(location, pileName, updatedPile);
+    this.updatePileInLocation(location, pileName, updatedPile, locationId);
 
     this.addEvent({
       id: this.generateEventId(),
@@ -804,16 +1198,16 @@ export class GameStateAPIImpl implements GameStateAPI {
 
   // ===== UTILITY FUNCTIONS =====
 
-  public shufflePile(location: 'gameboard' | string, pileName: string): void {
-    const pile = this.getPileFromLocation(location, pileName);
+  public shufflePile(location: 'gameboard' | 'party' | string, pileName: string, locationId?: string): void {
+    const pile = this.getPileFromLocation(location, pileName, locationId);
     if (!pile) {
-      throw new Error(`Pile '${pileName}' not found in location '${location}'`);
+      throw new Error(`Pile '${pileName}' not found in location '${location}'${locationId ? ` (${locationId})` : ''}`);
     }
 
     const shuffledCards = shuffleCards(pile.cards);
     const updatedPile = pile.withCards(shuffledCards);
 
-    this.updatePileInLocation(location, pileName, updatedPile);
+    this.updatePileInLocation(location, pileName, updatedPile, locationId);
 
     this.addEvent({
       id: this.generateEventId(),
@@ -824,16 +1218,27 @@ export class GameStateAPIImpl implements GameStateAPI {
   }
 
   public moveCard(
-    fromLocation: 'gameboard' | string,
+    fromLocation: 'gameboard' | 'party' | string,
     fromPile: string,
     fromIndex: number,
-    toLocation: 'gameboard' | string,
-    toPile: string
+    toLocation: 'gameboard' | 'party' | string,
+    toPile: string,
+    fromLocationId?: string,
+    toLocationId?: string
   ): void {
     // Remove card from source pile
-    const removedCard = fromLocation === 'gameboard'
-      ? this.removeCardFromGameboardPile(fromPile, fromIndex)
-      : this.removeCardFromHandPile(fromLocation, fromPile, fromIndex);
+    let removedCard: CardInPile | null = null;
+    
+    if (fromLocation === 'gameboard') {
+      removedCard = this.removeCardFromGameboardPile(fromPile, fromIndex);
+    } else if (fromLocation === 'party') {
+      if (!fromLocationId) {
+        throw new Error('Party ID (fromLocationId) is required when moving from party location');
+      }
+      removedCard = this.removeCardFromPartyPile(fromLocationId, fromPile, fromIndex);
+    } else {
+      removedCard = this.removeCardFromHandPile(fromLocation, fromPile, fromIndex);
+    }
 
     if (!removedCard) {
       throw new Error(`No card found at index ${fromIndex} in pile '${fromPile}'`);
@@ -842,6 +1247,19 @@ export class GameStateAPIImpl implements GameStateAPI {
     // Add card to destination pile
     if (toLocation === 'gameboard') {
       this.addCardToGameboardPile(
+        toPile,
+        removedCard.card,
+        removedCard.faceUp,
+        removedCard.owner || undefined,
+        removedCard.orientation,
+        removedCard.status
+      );
+    } else if (toLocation === 'party') {
+      if (!toLocationId) {
+        throw new Error('Party ID (toLocationId) is required when moving to party location');
+      }
+      this.addCardToPartyPile(
+        toLocationId,
         toPile,
         removedCard.card,
         removedCard.faceUp,
@@ -893,26 +1311,51 @@ export class GameStateAPIImpl implements GameStateAPI {
 
   // ===== VISIBILITY AND ACCESS CONTROL =====
 
-  public canAccessPile(participantId: string, location: 'gameboard' | string, pileName: string): boolean {
+  public canAccessPile(participantId: string, location: 'gameboard' | 'party' | string, pileName: string, locationId?: string): boolean {
+    if (location === 'party') {
+      if (!locationId) {
+        return false; // Cannot access party without party ID
+      }
+      const participant = this.gameState.participants.get(participantId);
+      const party = this.gameState.parties.get(locationId);
+      return participant?.partyId === locationId && (party as PartyModel)?.hasParticipant(participantId) === true;
+    }
     return canParticipantAccessPile(participantId, location, pileName, this.gameState.hands);
   }
 
-  public canAccessPlacement(participantId: string, location: 'gameboard' | string, placementName: string): boolean {
+  public canAccessPlacement(participantId: string, location: 'gameboard' | 'party' | string, placementName: string, locationId?: string): boolean {
+    if (location === 'party') {
+      if (!locationId) {
+        return false; // Cannot access party without party ID
+      }
+      const participant = this.gameState.participants.get(participantId);
+      const party = this.gameState.parties.get(locationId);
+      return participant?.partyId === locationId && (party as PartyModel)?.hasParticipant(participantId) === true;
+    }
     return canParticipantAccessPlacement(participantId, location, placementName, this.gameState.hands);
   }
 
-  public getVisibleCards(participantId: string, location: 'gameboard' | string, pileName: string): CardInPile[] {
-    if (!this.canAccessPile(participantId, location, pileName)) {
-      throw new AccessDeniedError(participantId, `pile '${pileName}' in '${location}'`);
+  public getVisibleCards(participantId: string, location: 'gameboard' | 'party' | string, pileName: string, locationId?: string): CardInPile[] {
+    if (!this.canAccessPile(participantId, location, pileName, locationId)) {
+      throw new AccessDeniedError(participantId, `pile '${pileName}' in '${location}'${locationId ? ` (${locationId})` : ''}`);
     }
 
-    const pile = this.getPileFromLocation(location, pileName);
+    const pile = this.getPileFromLocation(location, pileName, locationId);
     if (!pile) {
-      throw new Error(`Pile '${pileName}' not found in location '${location}'`);
+      throw new Error(`Pile '${pileName}' not found in location '${location}'${locationId ? ` (${locationId})` : ''}`);
     }
 
-    const isOwnerOfContainer = location !== 'gameboard' &&
-      this.gameState.hands.get(location)?.participantId === participantId;
+    let isOwnerOfContainer = false;
+    if (location === 'gameboard') {
+      isOwnerOfContainer = false; // Gameboard is shared
+    } else if (location === 'party') {
+      // Party members have shared access to party resources
+      const participant = this.gameState.participants.get(participantId);
+      isOwnerOfContainer = participant?.partyId === locationId;
+    } else {
+      // Hand location
+      isOwnerOfContainer = this.gameState.hands.get(location)?.participantId === participantId;
+    }
 
     return getVisibleCardsInPile(participantId, pile.cards, isOwnerOfContainer);
   }
@@ -1015,25 +1458,33 @@ export class GameStateAPIImpl implements GameStateAPI {
     this.historyManager.createSnapshot(this.gameState, action);
   }
 
-  private getPileFromLocation(location: 'gameboard' | string, pileName: string): CardPile | null {
+  private getPileFromLocation(location: 'gameboard' | 'party' | string, pileName: string, locationId?: string): CardPile | null {
     if (location === 'gameboard') {
       return this.gameState.gameboard.piles.get(pileName) as CardPile || null;
+    } else if (location === 'party') {
+      if (!locationId) return null;
+      const party = this.gameState.parties.get(locationId);
+      return party?.piles.get(pileName) as CardPile || null;
     } else {
       const hand = this.gameState.hands.get(location);
       return hand?.piles.get(pileName) as CardPile || null;
     }
   }
 
-  private getPlacementFromLocation(location: 'gameboard' | string, placementName: string): CardPlacement | null {
+  private getPlacementFromLocation(location: 'gameboard' | 'party' | string, placementName: string, locationId?: string): CardPlacement | null {
     if (location === 'gameboard') {
       return this.gameState.gameboard.placements.get(placementName) as CardPlacement || null;
+    } else if (location === 'party') {
+      if (!locationId) return null;
+      const party = this.gameState.parties.get(locationId);
+      return party?.placements.get(placementName) as CardPlacement || null;
     } else {
       const hand = this.gameState.hands.get(location);
       return hand?.placements.get(placementName) as CardPlacement || null;
     }
   }
 
-  private updatePileInLocation(location: 'gameboard' | string, pileName: string, updatedPile: CardPile): void {
+  private updatePileInLocation(location: 'gameboard' | 'party' | string, pileName: string, updatedPile: CardPile, locationId?: string): void {
     if (location === 'gameboard') {
       const newPiles = new Map(this.gameState.gameboard.piles as Map<string, CardPile>);
       newPiles.set(pileName, updatedPile);
@@ -1043,6 +1494,22 @@ export class GameStateAPIImpl implements GameStateAPI {
         ...this.gameState,
         gameboard: updatedGameboard
       };
+    } else if (location === 'party') {
+      if (!locationId) return;
+      const party = this.gameState.parties.get(locationId);
+      if (party) {
+        const newPiles = new Map(party.piles as Map<string, CardPile>);
+        newPiles.set(pileName, updatedPile);
+        const updatedParty = (party as PartyModel).withPiles(newPiles);
+
+        const newParties = new Map(this.gameState.parties);
+        newParties.set(locationId, updatedParty);
+
+        this.gameState = {
+          ...this.gameState,
+          parties: newParties
+        };
+      }
     } else {
       const hand = this.gameState.hands.get(location);
       if (hand) {
@@ -1061,7 +1528,7 @@ export class GameStateAPIImpl implements GameStateAPI {
     }
   }
 
-  private updatePlacementInLocation(location: 'gameboard' | string, placementName: string, updatedPlacement: CardPlacement): void {
+  private updatePlacementInLocation(location: 'gameboard' | 'party' | string, placementName: string, updatedPlacement: CardPlacement, locationId?: string): void {
     if (location === 'gameboard') {
       const newPlacements = new Map(this.gameState.gameboard.placements as Map<string, CardPlacement>);
       newPlacements.set(placementName, updatedPlacement);
@@ -1071,6 +1538,22 @@ export class GameStateAPIImpl implements GameStateAPI {
         ...this.gameState,
         gameboard: updatedGameboard
       };
+    } else if (location === 'party') {
+      if (!locationId) return;
+      const party = this.gameState.parties.get(locationId);
+      if (party) {
+        const newPlacements = new Map(party.placements as Map<string, CardPlacement>);
+        newPlacements.set(placementName, updatedPlacement);
+        const updatedParty = (party as PartyModel).withPlacements(newPlacements);
+
+        const newParties = new Map(this.gameState.parties);
+        newParties.set(locationId, updatedParty);
+
+        this.gameState = {
+          ...this.gameState,
+          parties: newParties
+        };
+      }
     } else {
       const hand = this.gameState.hands.get(location);
       if (hand) {

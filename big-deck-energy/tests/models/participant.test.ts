@@ -28,7 +28,7 @@ describe('Participant Model', () => {
 
     it('should create a participant with status', () => {
       const status = { score: 100, level: 5 };
-      const participant = new Participant('player1', 'Alice', false, [], status);
+      const participant = new Participant('player1', 'Alice', false, [], null, status);
       
       expect(participant.status).toEqual(status);
     });
@@ -57,7 +57,7 @@ describe('Participant Model', () => {
     });
 
     it('should freeze status object', () => {
-      const participant = new Participant('player1', 'Alice', false, [], { score: 100 });
+      const participant = new Participant('player1', 'Alice', false, [], null, { score: 100 });
       
       expect(Object.isFrozen(participant.status)).toBe(true);
       expect(() => {
@@ -69,7 +69,7 @@ describe('Participant Model', () => {
       const handIds = ['hand1', 'hand2'];
       const status = { score: 100 };
       
-      const participant = new Participant('player1', 'Alice', false, handIds, status);
+      const participant = new Participant('player1', 'Alice', false, handIds, null, status);
       
       // Modify original arrays/objects
       handIds.push('hand3');
@@ -117,7 +117,7 @@ describe('Participant Model', () => {
     let participant: Participant;
 
     beforeEach(() => {
-      participant = new Participant('player1', 'Alice', false, [], { score: 100, level: 5 });
+      participant = new Participant('player1', 'Alice', false, [], null, { score: 100, level: 5 });
     });
 
     it('should get status values', () => {

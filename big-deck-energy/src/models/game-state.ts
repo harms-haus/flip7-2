@@ -2,6 +2,7 @@ import { GameState as IGameState } from '../core/interfaces/game-state';
 import { GameEvent, EventFilter } from '../core/interfaces/events';
 import { GamePhase } from '../core/types';
 import { Participant } from './participant';
+import { Party } from './party';
 import { Gameboard } from './gameboard';
 import { Hand } from './hand';
 
@@ -14,6 +15,7 @@ export class GameState implements IGameState {
   public readonly gameboard: Gameboard;
   public readonly participants: Map<string, Participant>;
   public readonly hands: Map<string, Hand>;
+  public readonly parties: Map<string, Party>;
   public readonly events: GameEvent[];
   public readonly metadata: Record<string, any>;
 
@@ -23,6 +25,7 @@ export class GameState implements IGameState {
     gameboard: Gameboard = new Gameboard(),
     participants: Map<string, Participant> = new Map(),
     hands: Map<string, Hand> = new Map(),
+    parties: Map<string, Party> = new Map(),
     events: GameEvent[] = [],
     metadata: Record<string, any> = {}
   ) {
@@ -31,12 +34,14 @@ export class GameState implements IGameState {
     this.gameboard = gameboard;
     this.participants = new Map(participants); // Create a copy
     this.hands = new Map(hands); // Create a copy
+    this.parties = new Map(parties); // Create a copy
     this.events = [...events]; // Create a copy
     this.metadata = Object.freeze({ ...metadata });
     
     // Freeze collections and the instance
     Object.freeze(this.participants);
     Object.freeze(this.hands);
+    Object.freeze(this.parties);
     Object.freeze(this.events);
     Object.freeze(this);
   }
@@ -56,6 +61,13 @@ export class GameState implements IGameState {
   }
 
   /**
+   * Get a party by ID
+   */
+  public getParty(id: string): Party | undefined {
+    return this.parties.get(id);
+  }
+
+  /**
    * Check if a participant exists
    */
   public hasParticipant(id: string): boolean {
@@ -67,6 +79,13 @@ export class GameState implements IGameState {
    */
   public hasHand(id: string): boolean {
     return this.hands.has(id);
+  }
+
+  /**
+   * Check if a party exists
+   */
+  public hasParty(id: string): boolean {
+    return this.parties.has(id);
   }
 
   /**
@@ -84,6 +103,13 @@ export class GameState implements IGameState {
   }
 
   /**
+   * Get all party IDs
+   */
+  public getPartyIds(): string[] {
+    return Array.from(this.parties.keys());
+  }
+
+  /**
    * Get hands belonging to a specific participant
    */
   public getParticipantHands(participantId: string): Hand[] {
@@ -93,6 +119,28 @@ export class GameState implements IGameState {
     return participant.handIds
       .map(handId => this.getHand(handId))
       .filter((hand): hand is Hand => hand !== undefined);
+  }
+
+  /**
+   * Get the party that a participant belongs to
+   */
+  public getParticipantParty(participantId: string): Party | undefined {
+    const participant = this.getParticipant(participantId);
+    if (!participant || !participant.partyId) return undefined;
+    
+    return this.getParty(participant.partyId);
+  }
+
+  /**
+   * Get all participants in a specific party
+   */
+  public getPartyParticipants(partyId: string): Participant[] {
+    const party = this.getParty(partyId);
+    if (!party) return [];
+    
+    return party.participantIds
+      .map(participantId => this.getParticipant(participantId))
+      .filter((participant): participant is Participant => participant !== undefined);
   }
 
   /**
@@ -138,6 +186,7 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       this.hands,
+      this.parties,
       this.events,
       this.metadata
     );
@@ -153,6 +202,7 @@ export class GameState implements IGameState {
       gameboard,
       this.participants,
       this.hands,
+      this.parties,
       this.events,
       this.metadata
     );
@@ -168,6 +218,7 @@ export class GameState implements IGameState {
       this.gameboard,
       participants,
       this.hands,
+      this.parties,
       this.events,
       this.metadata
     );
@@ -183,6 +234,23 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       hands,
+      this.parties,
+      this.events,
+      this.metadata
+    );
+  }
+
+  /**
+   * Create a new game state with updated parties
+   */
+  public withParties(parties: Map<string, Party>): GameState {
+    return new GameState(
+      this.gameId,
+      this.phase,
+      this.gameboard,
+      this.participants,
+      this.hands,
+      parties,
       this.events,
       this.metadata
     );
@@ -198,6 +266,7 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       this.hands,
+      this.parties,
       events,
       this.metadata
     );
@@ -213,6 +282,7 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       this.hands,
+      this.parties,
       this.events,
       metadata
     );
@@ -222,6 +292,6 @@ export class GameState implements IGameState {
    * Create a string representation of this game state
    */
   public toString(): string {
-    return `GameState(${this.gameId}, phase: ${this.phase}, participants: ${this.participants.size}, hands: ${this.hands.size}, events: ${this.events.length})`;
+    return `GameState(${this.gameId}, phase: ${this.phase}, participants: ${this.participants.size}, hands: ${this.hands.size}, parties: ${this.parties.size}, events: ${this.events.length})`;
   }
 }

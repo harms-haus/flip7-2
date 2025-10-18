@@ -44,9 +44,9 @@ npm run format       # Prettier formatting
 ### Testing
 ```bash
 npm tests             # Run all tests
-npm run tests:unit    # Unit tests only
-npm run tests:integration  # Integration tests
-npm run tests:coverage     # Test coverage report
+npm run tests         # Run all tests
+npm run tests:lib     # Library tests
+npm run tests:cli     # CLI tests
 ```
 
 ### Package Management

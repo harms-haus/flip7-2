@@ -585,6 +585,7 @@ export class SerializationEngine {
       this.deserializeGameboard(data.gameboard),
       participants,
       hands,
+      new Map(), // parties - empty for now since serialization doesn't support parties yet
       data.events,
       data.metadata
     );

@@ -16,6 +16,7 @@ describe('Event System', () => {
       new Gameboard(),
       new Map(),
       new Map(),
+      new Map(),
       [],
       {}
     );

@@ -4,6 +4,7 @@ export * from './deck-type.js';
 export * from './ruleset.js';
 export * from './game-state.js';
 export * from './participant.js';
+export * from './party.js';
 export * from './gameboard.js';
 export * from './hand.js';
 export * from './events.js';

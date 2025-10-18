@@ -14,6 +14,9 @@ export interface Participant {
   /** IDs of hands belonging to this participant */
   readonly handIds: string[];
   
+  /** ID of party this participant belongs to (null if not in a party) */
+  readonly partyId: string | null;
+  
   /** Custom status data for this participant */
   readonly status: Record<string, any>;
 }

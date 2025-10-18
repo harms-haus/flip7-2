@@ -150,6 +150,7 @@ interface GameState {
   readonly gameboard: Gameboard;
   readonly participants: Map<string, Participant>;
   readonly hands: Map<string, Hand>;
+  readonly parties: Map<string, Party>;
   readonly events: GameEvent[];
   readonly metadata: Record<string, any>;
   readonly version: string; // Library version for serialization compatibility
@@ -193,6 +194,16 @@ interface Participant {
   readonly name: string;
   readonly isNPC: boolean;
   readonly handIds: string[];
+  readonly partyId: string | null;
+  readonly status: Record<string, any>;
+}
+
+interface Party {
+  readonly id: string;
+  readonly name: string;
+  readonly participantIds: string[];
+  readonly piles: Map<string, CardPile>;
+  readonly placements: Map<string, CardPlacement>;
   readonly status: Record<string, any>;
 }
 
@@ -243,6 +254,46 @@ interface CardInPlacement {
 }
 ```
 
+### Party System Architecture
+
+The party system is an optional feature that enables team-based card games. Parties act as containers for multiple participants and provide shared storage for cards and status information.
+
+#### Party Design Principles
+- **Optional Integration**: Games can function normally without using parties
+- **Shared Resources**: Parties have their own piles and placements separate from individual hands
+- **Team Membership**: Participants can belong to zero or one party at any time
+- **Access Control**: Party members have shared access to party resources
+- **Status Tracking**: Parties maintain team-specific game state information
+
+#### Party-Participant Relationship
+```mermaid
+graph TB
+    A[Game State] --> B[Participants]
+    A --> C[Parties]
+    A --> D[Hands]
+    
+    C --> E[Party Piles]
+    C --> F[Party Placements]
+    C --> G[Party Status]
+    
+    B --> H[Participant 1]
+    B --> I[Participant 2]
+    B --> J[Participant 3]
+    
+    H --> C
+    I --> C
+    
+    H --> K[Hand 1]
+    I --> L[Hand 2]
+    J --> M[Hand 3]
+```
+
+#### Party Access Control
+- Party members can access all party piles and placements
+- Non-party members cannot access party resources
+- Face-down cards in party piles follow standard visibility rules
+- Party membership is managed through the Game State API
+
 ### Component Responsibilities
 
 #### Game Instance Manager
@@ -290,7 +341,19 @@ interface GameStateAPI {
   updateParticipantStatus(participantId: string, key: string, value: any): void;
   addHandToParticipant(participantId: string, handId: string): void;
   removeHandFromParticipant(participantId: string, handId: string): void;
+  addParticipantToParty(participantId: string, partyId: string): void;
+  removeParticipantFromParty(participantId: string): void;
   getParticipant(participantId: string): Participant | null;
+  
+  // Party Management
+  createParty(id: string, name: string): void;
+  createPartyPile(partyId: string, pileName: string, isOrdered: boolean, orientation?: CardOrientation): void;
+  addCardToPartyPile(partyId: string, pileName: string, card: Card, faceUp: boolean, owner?: string, orientation?: CardOrientation, status?: Record<string, any>): void;
+  removeCardFromPartyPile(partyId: string, pileName: string, index?: number): CardInPile | null;
+  setPartyPlacement(partyId: string, placementName: string, card: Card | null, faceUp?: boolean, owner?: string, orientation?: CardOrientation, status?: Record<string, any>): void;
+  getPartyPlacement(partyId: string, placementName: string): CardInPlacement | null;
+  updatePartyStatus(partyId: string, key: string, value: any): void;
+  getParty(partyId: string): Party | null;
   
   // Hand Management
   createHand(handId: string, name: string, participantId: string): void;
@@ -316,13 +379,13 @@ interface GameStateAPI {
   flipCard(location: 'gameboard' | string, pileName: string, cardIndex: number, faceUp: boolean): void;
   
   // Utility Functions
-  shufflePile(location: 'gameboard' | string, pileName: string): void;
-  moveCard(fromLocation: 'gameboard' | string, fromPile: string, fromIndex: number, toLocation: 'gameboard' | string, toPile: string): void;
+  shufflePile(location: 'gameboard' | 'party' | string, pileName: string, locationId?: string): void;
+  moveCard(fromLocation: 'gameboard' | 'party' | string, fromPile: string, fromIndex: number, toLocation: 'gameboard' | 'party' | string, toPile: string, fromLocationId?: string, toLocationId?: string): void;
   
   // Visibility and Access Control
-  canAccessPile(participantId: string, location: 'gameboard' | string, pileName: string): boolean;
-  canAccessPlacement(participantId: string, location: 'gameboard' | string, placementName: string): boolean;
-  getVisibleCards(participantId: string, location: 'gameboard' | string, pileName: string): CardInPile[];
+  canAccessPile(participantId: string, location: 'gameboard' | 'party' | string, pileName: string, locationId?: string): boolean;
+  canAccessPlacement(participantId: string, location: 'gameboard' | 'party' | string, placementName: string, locationId?: string): boolean;
+  getVisibleCards(participantId: string, location: 'gameboard' | 'party' | string, pileName: string, locationId?: string): CardInPile[];
   
   // Event Management
   addEvent(event: GameEvent): void;

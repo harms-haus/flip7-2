@@ -1,4 +1,5 @@
 import { Participant } from './participant';
+import { Party } from './party';
 import { Gameboard } from './gameboard';
 import { Hand } from './hand';
 import { GameEvent } from './events';
@@ -22,6 +23,9 @@ export interface GameState {
   
   /** All hands in the game */
   readonly hands: Map<string, Hand>;
+  
+  /** All parties in the game */
+  readonly parties: Map<string, Party>;
   
   /** Complete event history */
   readonly events: GameEvent[];
