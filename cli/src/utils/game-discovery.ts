@@ -1,6 +1,11 @@
 import { promises as fs } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { GameConfiguration } from '../types';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Discover available game configurations.
@@ -8,7 +13,7 @@ import { GameConfiguration } from '../types';
  */
 export async function discoverGames(): Promise<GameConfiguration[]> {
   const games: GameConfiguration[] = [];
-  const gamesDir = resolve(__dirname, '../../games');
+  const gamesDir = resolve(__dirname, 'games');
   
   try {
     // Check if games directory exists
@@ -46,30 +51,45 @@ export async function discoverGames(): Promise<GameConfiguration[]> {
  */
 async function loadGameConfiguration(gamePath: string): Promise<GameConfiguration | null> {
   try {
-    // Try to load index file first
-    const indexPath = join(gamePath, 'index.js');
+    // Try to load index file first (both .js and .ts)
+    const indexFiles = ['index.js', 'index.ts'];
     
-    try {
-      await fs.access(indexPath);
-      const gameModule = await import(indexPath);
-      return createGameInstance(gameModule);
-    } catch {
-      // Index file doesn't exist, try other common names
-      const configFiles = [
-        'config.js',
-        'game-config.js',
-        `${gamePath.split('/').pop()}-config.js`,
-      ];
-      
-      for (const configFile of configFiles) {
-        try {
-          const configPath = join(gamePath, configFile);
-          await fs.access(configPath);
-          const gameModule = await import(configPath);
-          return createGameInstance(gameModule);
-        } catch {
-          // Continue to next file
+    for (const indexFile of indexFiles) {
+      try {
+        const indexPath = join(gamePath, indexFile);
+        await fs.access(indexPath);
+        const gameModule = await import(indexPath);
+        const instance = createGameInstance(gameModule);
+        if (instance) {
+          return instance;
         }
+      } catch {
+        // Continue to next file
+      }
+    }
+    
+    // Index file doesn't exist, try other common names
+    const configFiles = [
+      'config.js',
+      'config.ts',
+      'game-config.js',
+      'game-config.ts',
+      `${gamePath.split('/').pop()}-config.js`,
+      `${gamePath.split('/').pop()}-config.ts`,
+      `${gamePath.split('/').pop()}-config.tsx`,
+    ];
+    
+    for (const configFile of configFiles) {
+      try {
+        const configPath = join(gamePath, configFile);
+        await fs.access(configPath);
+        const gameModule = await import(configPath);
+        const instance = createGameInstance(gameModule);
+        if (instance) {
+          return instance;
+        }
+      } catch {
+        // Continue to next file
       }
     }
   } catch (error) {

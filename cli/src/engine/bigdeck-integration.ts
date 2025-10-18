@@ -274,12 +274,79 @@ export class BigDeckEnergyWrapper {
     // This is a placeholder implementation
     // The actual implementation would use BigDeckEnergy's API
     
-    // For now, we'll create a mock instance
+    // For now, we'll create a mock instance with proper game state structure
+    const mockHands = new Map(config.setupResult.players.map(p => [`${p.id}_hand`, {
+      id: `${p.id}_hand`,
+      name: `${p.name}'s Hand`,
+      participantId: p.id,
+      piles: new Map([
+        ['cards', {
+          id: 'cards',
+          name: 'Cards',
+          cards: [],
+          maxSize: 52,
+          status: {}
+        }]
+      ]),
+      placements: new Map(),
+      status: {},
+      getTotalCardCount: () => 0,
+      getPile: (pileId: string) => {
+        const pile = mockHands.get(`${p.id}_hand`)?.piles.get(pileId);
+        return pile || null;
+      }
+    }]));
+
+    const mockParticipants = new Map(config.setupResult.players.map((p, index) => [p.id, {
+      ...p,
+      status: {
+        ...p.status,
+        turn: index === 0, // First player starts
+        books: 0
+      },
+      handIds: [`${p.id}_hand`]
+    }]));
+
     const mockInstance = {
       getState: () => ({ 
-        players: config.setupResult.players,
-        currentPlayer: config.setupResult.players[0]?.id || '',
-        phase: 'playing'
+        participants: mockParticipants,
+        hands: mockHands,
+        gameboard: {
+          id: 'main_board',
+          name: 'Game Board',
+          piles: new Map([
+            ['deck', {
+              id: 'deck',
+              name: 'Deck',
+              cards: [],
+              maxSize: 52,
+              status: {}
+            }],
+            ['books', {
+              id: 'books',
+              name: 'Books',
+              cards: [],
+              maxSize: 52,
+              status: {}
+            }]
+          ]),
+          placements: new Map(),
+          status: {}
+        },
+        phase: 'playing',
+        turnOrder: config.setupResult.players.map(p => p.id),
+        currentTurnIndex: 0,
+        status: {},
+        getParticipantHands: (participantId: string) => {
+          const participant = mockParticipants.get(participantId);
+          if (!participant) return [];
+          
+          return participant.handIds
+            .map(handId => mockHands.get(handId))
+            .filter(hand => hand !== undefined);
+        },
+        getParticipant: (participantId: string) => mockParticipants.get(participantId),
+        getHand: (handId: string) => mockHands.get(handId)
       }),
       getCurrentPlayer: () => config.setupResult.players[0]?.id || '',
       applyAction: (_action: any) => true,

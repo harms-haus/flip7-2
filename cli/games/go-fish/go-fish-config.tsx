@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { GameState, GameInstance, Hand, Gameboard } from 'big-deck-energy';
-import { Participant } from '../../../src/models/participant';
+import { Participant } from '../../../src/models/participant.js';
 import { GameConfiguration } from '../../src/types/game-configuration';
 import { ActionDefinition, GameSetupResult, GameStats, GameResult } from '../../src/types/actions';
 // import { HandRenderer } from '../../src/components/CardRenderer';
@@ -23,10 +23,10 @@ export class GoFishGameConfiguration extends GameConfiguration {
   async setupGame(): Promise<GameSetupResult> {
     // For Go Fish, we need 2-6 players
     const players: Participant[] = [];
-    
+
     // Default to 3 players for Go Fish
     const playerCount = 3;
-    
+
     for (let i = 0; i < playerCount; i++) {
       players.push(new Participant(
         `player_${i + 1}`,
@@ -121,7 +121,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
   renderPlayerHand(hand: Hand, isCurrentPlayer: boolean): React.ReactElement {
     const cardsPile = hand.piles.get('cards');
     const booksPile = hand.piles.get('books');
-    
+
     if (!cardsPile) {
       return <Text>No cards</Text>;
     }
@@ -141,7 +141,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
             <Text dimColor>... +{cards.length - 10} more</Text>
           )}
         </Box>
-        
+
         {booksPile && booksPile.cards.length > 0 && (
           <Box marginTop={1}>
             <Text dimColor>Books: {Math.floor(booksPile.cards.length / 4)}</Text>
@@ -154,7 +154,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
   renderGameBoard(board: Gameboard): React.ReactElement {
     const deckPile = board.piles.get('deck');
     const booksPile = board.piles.get('books');
-    
+
     const deckCount = deckPile ? deckPile.cards.length : 0;
     const totalBooks = booksPile ? Math.floor(booksPile.cards.length / 4) : 0;
 
@@ -164,7 +164,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
           <Text bold>Deck: </Text>
           <Text>{deckCount} cards remaining</Text>
         </Box>
-        
+
         <Box>
           <Text bold>Completed Books: </Text>
           <Text>{totalBooks} / 13</Text>
@@ -175,16 +175,16 @@ export class GoFishGameConfiguration extends GameConfiguration {
 
   renderWinScreen(winner: string, gameStats: GameStats): React.ReactElement {
     const winnerName = gameStats.finalScores[winner] !== undefined ? winner : 'Unknown';
-    const sortedScores = Object.entries(gameStats.finalScores).sort(([,a], [,b]) => (b as number) - (a as number));
+    const sortedScores = Object.entries(gameStats.finalScores).sort(([, a], [, b]) => (b as number) - (a as number));
     const totalBooks = Object.values(gameStats.finalScores).reduce((sum, books) => (sum as number) + (books as number), 0);
-    
+
     return (
       <Box flexDirection="column" alignItems="center" padding={2}>
         {/* Title */}
         <Box marginBottom={2}>
           <Text bold color="green">🏆 Go Fish - Game Complete! 🏆</Text>
         </Box>
-        
+
         {/* Winner announcement */}
         <Box marginBottom={2} padding={1} borderStyle="double" borderColor="yellow">
           <Text bold color="yellow">🎉 Winner: {winnerName} 🎉</Text>
@@ -197,12 +197,12 @@ export class GoFishGameConfiguration extends GameConfiguration {
         <Box marginBottom={2}>
           <Text bold color="blue">📊 Final Standings:</Text>
         </Box>
-        
+
         <Box flexDirection="column" marginBottom={2}>
           {sortedScores.map(([player, books], index) => {
             const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '  ';
             const color = player === winner ? 'green' : index < 3 ? 'yellow' : 'white';
-            
+
             return (
               <Box key={player} marginBottom={1}>
                 <Text color={color}>
@@ -247,7 +247,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
   getAvailableActions(state: GameState, player: string): ActionDefinition[] {
     const actions: ActionDefinition[] = [];
     const playerData = state.participants.get(player);
-    
+
     if (!playerData || !playerData.status.turn) {
       return actions;
     }
@@ -399,7 +399,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
     const actions = this.getAvailableActions(state, currentPlayer);
     const availableRanks = this.getPlayerRanks(state, currentPlayer);
     const availableTargets = this.getAvailableTargets(state, currentPlayer);
-    
+
     return (
       <Box flexDirection="column">
         <Text bold>Available Actions:</Text>
@@ -410,7 +410,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
             </Text>
           </Box>
         ))}
-        
+
         {availableRanks.length > 0 && availableTargets.length > 0 && (
           <Box marginTop={1}>
             <Text dimColor>
@@ -498,7 +498,7 @@ export class GoFishGameConfiguration extends GameConfiguration {
         {sortedRanks.map(rank => {
           const cards = cardsByRank.get(rank)!;
           const isComplete = cards.length === 4;
-          
+
           return (
             <Box key={rank} flexDirection="row" marginLeft={1} marginBottom={1}>
               <Text color={isComplete ? 'green' : 'white'}>

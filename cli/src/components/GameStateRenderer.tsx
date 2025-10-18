@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { GameState } from 'big-deck-energy';
 import { GameConfiguration } from '../types/game-configuration';
 import { UIAdapter } from '../types/ui-adapter';
@@ -118,6 +118,34 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
   const handleInputError = React.useCallback((error: string) => {
     onError(`Input error: ${error}`);
   }, [onError]);
+
+  // Handle input when no gameLoop is provided
+  useInput((input, key) => {
+    if (!gameLoop) {
+      try {
+        // Handle escape/quit
+        if (key.escape || input === 'q') {
+          onBackToMenu();
+          return;
+        }
+
+        // Find matching action by key binding
+        const action = availableActions.find(a => a.keyBinding === input);
+        if (action) {
+          // Create a simple action object
+          const gameAction = {
+            type: action.id,
+            playerId: currentPlayer,
+            payload: {},
+            timestamp: Date.now()
+          };
+          onPlayerAction(gameAction);
+        }
+      } catch (error) {
+        onError(`Input handling error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+  }, { isActive: !gameLoop });
 
   // Calculate layout areas based on terminal size
   const layout = calculateGameLayout(terminalSize);

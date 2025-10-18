@@ -110,7 +110,7 @@ export const App: React.FC<AppProps> = ({
         if (initialGame) {
           const selectedGame = games.find(g => g.gameId === initialGame);
           if (selectedGame) {
-            navigateToScreen('game', { selectedGame });
+            navigateToScreen('setup', { selectedGame });
           } else {
             showError(`Game '${initialGame}' not found. Available games: ${games.map(g => g.gameId).join(', ')}`);
             return;
@@ -197,14 +197,36 @@ export const App: React.FC<AppProps> = ({
             game={appState.selectedGame!}
             settings={appState.settings}
             terminalSize={appState.terminalSize}
-            onSetupComplete={(setupResult) => {
-              // TODO: Initialize game instance with setup result
-              // For now, just navigate to game screen
-              setAppState(prev => ({
-                ...prev,
-                players: setupResult.players,
-              }));
-              navigateToScreen('game');
+            onSetupComplete={async (setupResult) => {
+              try {
+                // Initialize game instance with setup result
+                const { BigDeckEnergyWrapper } = await import('../engine/bigdeck-integration.js');
+                const wrapper = new BigDeckEnergyWrapper();
+                
+                const gameConfig = {
+                  deckType: appState.selectedGame!.deckType,
+                  rulesetType: appState.selectedGame!.rulesetType,
+                  setupResult,
+                };
+
+                const gameInstance = await wrapper.createGame(gameConfig);
+                
+                // Set the first player as current player
+                const firstPlayer = setupResult.players[0]?.id || null;
+                
+                setAppState(prev => ({
+                  ...prev,
+                  players: setupResult.players,
+                  gameInstance,
+                  currentPlayer: firstPlayer,
+                  gamePhase: 'playing',
+                }));
+                
+                navigateToScreen('game');
+              } catch (error) {
+                const message = error instanceof Error ? error.message : 'Failed to initialize game';
+                showError(`Game initialization failed: ${message}`);
+              }
             }}
             onCancel={() => navigateToScreen('menu')}
             onError={showError}
@@ -312,11 +334,26 @@ const GameScreen: React.FC<GameScreenProps> = ({
   onBackToMenu,
   onError
 }) => {
+  const [uiAdapter, setUiAdapter] = useState<any>(null);
+
+  // Initialize UIAdapter
+  useEffect(() => {
+    const initializeUIAdapter = async () => {
+      try {
+        const { DefaultUIAdapter } = await import('./UIAdapter.js');
+        setUiAdapter(new DefaultUIAdapter());
+      } catch (error) {
+        onError(`Failed to initialize UI adapter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    };
+    
+    initializeUIAdapter();
+  }, [onError]);
+
   // If we have a game instance with state, use the GameStateRenderer
-  if (gameInstance && gameInstance.getState && game && currentPlayer) {
+  if (gameInstance && gameInstance.getState && game && currentPlayer && uiAdapter) {
     try {
       const gameState = gameInstance.getState();
-      const uiAdapter = new (require('./UIAdapter').DefaultUIAdapter)();
       
       return (
         <GameStateRenderer
@@ -328,7 +365,14 @@ const GameScreen: React.FC<GameScreenProps> = ({
           onPlayerAction={(action) => {
             try {
               // Process the action through the game instance
-              gameInstance.processAction(action);
+              if (gameInstance.processAction) {
+                gameInstance.processAction(action);
+              } else if (gameInstance.applyAction) {
+                gameInstance.applyAction(action);
+              } else {
+                console.log('Action received:', action);
+                // For now, just log the action since we're using mock data
+              }
             } catch (error) {
               onError(`Action failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }

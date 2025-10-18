@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { Card, Participant } from 'big-deck-energy';
+import { Card } from 'big-deck-energy';
+import { Participant } from '../../../src/models/participant.js';
 import {
   UIAdapter,
   BoxOptions,
