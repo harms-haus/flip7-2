@@ -41,7 +41,7 @@
   "author": "BigDeckEnergy Contributors",
   "license": "MIT",
   "dependencies": {
-    "big-deck-energy": "file:../",
+    "big-deck-energy": "file:../big-deck-energy",
     "chalk": "^5.3.0",
     "commander": "^11.0.0",
     "ink": "^4.4.1",
