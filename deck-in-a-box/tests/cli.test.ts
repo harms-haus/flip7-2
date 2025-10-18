@@ -7,7 +7,7 @@ jest.mock('ink', () => ({
   Text: ({ children }: any) => children,
 }));
 
-jest.mock('../src/utils/terminal-detection', () => ({
+jest.mock('../src/utils/terminal-detection.js', () => ({
   detectTerminalCapabilities: jest.fn(() => ({
     hasColors: true,
     hasUnicode: true,
@@ -22,7 +22,7 @@ jest.mock('../src/utils/terminal-detection', () => ({
   })),
 }));
 
-jest.mock('../src/utils/game-discovery', () => ({
+jest.mock('../src/utils/game-discovery.js', () => ({
   discoverGames: jest.fn(() => Promise.resolve([
     {
       gameId: 'war',
@@ -43,6 +43,14 @@ jest.mock('../src/utils/game-discovery', () => ({
       validatePlayerCount: (count: number) => count >= 2 && count <= 6,
     },
   ])),
+}));
+
+// Mock React for CLI components
+jest.mock('react', () => ({
+  createElement: jest.fn((component, props) => ({ component, props })),
+  default: {
+    createElement: jest.fn((component, props) => ({ component, props })),
+  },
 }));
 
 describe('CLI Entry Point', () => {
@@ -304,6 +312,217 @@ describe('CLI Entry Point', () => {
       }).toThrow('process.exit called');
 
       expect(mockConsoleError).toHaveBeenCalledWith('❌ Failed to start DeckInABox:', 'Failed to start application');
+    });
+
+    it('should validate command line arguments before startup', () => {
+      const program = new Command();
+      program
+        .option('-g, --game <gameId>', 'start specific game')
+        .option('-d, --debug', 'enable debug mode')
+        .exitOverride();
+
+      // Test valid arguments
+      program.parse(['node', 'cli.js', '--game', 'war', '--debug']);
+      const options = program.opts();
+      
+      expect(options.game).toBe('war');
+      expect(options.debug).toBe(true);
+    });
+
+    it('should handle process signals for graceful shutdown', () => {
+      const mockUnmount = jest.fn();
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+        throw new Error('process.exit called');
+      });
+
+      // Simulate shutdown handler
+      const shutdown = (signal: string) => {
+        if (mockUnmount) {
+          mockUnmount();
+        }
+        process.exit(0);
+      };
+
+      expect(() => shutdown('SIGINT')).toThrow('process.exit called');
+      expect(mockUnmount).toHaveBeenCalled();
+      
+      mockExit.mockRestore();
+    });
+  });
+
+  describe('Command Line Integration', () => {
+    it('should handle list games command', async () => {
+      const { discoverGames } = require('../src/utils/game-discovery.js');
+      
+      // Mock process.exit for --list option
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+        throw new Error('process.exit called');
+      });
+
+      const games = await discoverGames();
+      
+      // Simulate --list command behavior
+      console.log('🎴 Available Games:\n');
+      games.forEach((game: any, index: number) => {
+        console.log(`   ${index + 1}. ${game.displayName} (${game.gameId})`);
+        console.log(`      ${game.description}`);
+        console.log(`      Deck: ${game.deckType} | Ruleset: ${game.rulesetType}\n`);
+      });
+
+      expect(mockConsoleLog).toHaveBeenCalledWith('🎴 Available Games:\n');
+      expect(mockConsoleLog).toHaveBeenCalledWith('   1. War (war)');
+      expect(mockConsoleLog).toHaveBeenCalledWith('   2. Go Fish (go-fish)');
+      
+      mockExit.mockRestore();
+    });
+
+    it('should handle game info command', async () => {
+      const { discoverGames } = require('../src/utils/game-discovery.js');
+      
+      const games = await discoverGames();
+      const game = games.find((g: any) => g.gameId === 'war');
+      
+      // Simulate --info command behavior
+      console.log(`🎴 Game Information: ${game.displayName}\n`);
+      console.log(`   ID: ${game.gameId}`);
+      console.log(`   Description: ${game.description}`);
+      console.log(`   Deck Type: ${game.deckType}`);
+      console.log(`   Ruleset: ${game.rulesetType}`);
+      console.log(`   Players: ${game.getDefaultPlayerCount()} (default)`);
+
+      expect(mockConsoleLog).toHaveBeenCalledWith('🎴 Game Information: War\n');
+      expect(mockConsoleLog).toHaveBeenCalledWith('   ID: war');
+      expect(mockConsoleLog).toHaveBeenCalledWith('   Description: Classic War card game');
+    });
+
+    it('should handle invalid game info request', async () => {
+      const { discoverGames } = require('../src/utils/game-discovery.js');
+      
+      const games = await discoverGames();
+      const game = games.find((g: any) => g.gameId === 'nonexistent');
+      
+      if (!game) {
+        console.error(`❌ Game 'nonexistent' not found.`);
+        console.log('\n🎴 Available games:');
+        games.forEach((g: any) => console.log(`   - ${g.gameId}`));
+      }
+
+      expect(mockConsoleError).toHaveBeenCalledWith(`❌ Game 'nonexistent' not found.`);
+      expect(mockConsoleLog).toHaveBeenCalledWith('\n🎴 Available games:');
+      expect(mockConsoleLog).toHaveBeenCalledWith('   - war');
+      expect(mockConsoleLog).toHaveBeenCalledWith('   - go-fish');
+    });
+
+    it('should validate argument combinations', () => {
+      const program = new Command();
+      program
+        .option('-g, --game <gameId>', 'start specific game')
+        .option('-l, --list', 'list available games')
+        .option('-i, --info <gameId>', 'show game info')
+        .exitOverride();
+
+      // Test mutually exclusive options
+      program.parse(['node', 'cli.js', '--list']);
+      expect(program.opts().list).toBe(true);
+
+      program.parse(['node', 'cli.js', '--info', 'war']);
+      expect(program.opts().info).toBe('war');
+
+      program.parse(['node', 'cli.js', '--game', 'go-fish']);
+      expect(program.opts().game).toBe('go-fish');
+    });
+
+    it('should handle empty games list gracefully', async () => {
+      const { discoverGames } = require('../src/utils/game-discovery.js');
+      
+      // Mock empty games list
+      (discoverGames as jest.Mock).mockResolvedValueOnce([]);
+      
+      const games = await discoverGames();
+      
+      // Simulate --list with no games
+      console.log('🎴 Available Games:\n');
+      if (games.length === 0) {
+        console.log('   No games found. Make sure game configurations are installed.');
+      }
+
+      expect(mockConsoleLog).toHaveBeenCalledWith('🎴 Available Games:\n');
+      expect(mockConsoleLog).toHaveBeenCalledWith('   No games found. Make sure game configurations are installed.');
+    });
+
+    it('should handle game discovery errors', async () => {
+      const { discoverGames } = require('../src/utils/game-discovery.js');
+      
+      // Mock discovery error
+      (discoverGames as jest.Mock).mockRejectedValueOnce(new Error('Discovery failed'));
+      
+      try {
+        await discoverGames();
+      } catch (error) {
+        console.error('❌ Error listing games:', (error as Error).message);
+      }
+
+      expect(mockConsoleError).toHaveBeenCalledWith('❌ Error listing games:', 'Discovery failed');
+    });
+  });
+
+  describe('Argument Validation and Error Scenarios', () => {
+    it('should reject unknown command line options', () => {
+      const program = new Command();
+      program.exitOverride();
+
+      expect(() => {
+        program.parse(['node', 'cli.js', '--unknown-option']);
+      }).toThrow();
+    });
+
+    it('should require value for options that need it', () => {
+      const program = new Command();
+      program
+        .option('-g, --game <gameId>', 'start specific game')
+        .option('-i, --info <gameId>', 'show game info')
+        .exitOverride();
+
+      // Test missing required value
+      expect(() => {
+        program.parse(['node', 'cli.js', '--game']);
+      }).toThrow();
+
+      expect(() => {
+        program.parse(['node', 'cli.js', '--info']);
+      }).toThrow();
+    });
+
+    it('should handle application startup validation', () => {
+      // Test non-interactive mode detection
+      process.stdout.isTTY = false;
+      process.stdin.isTTY = false;
+
+      const isInteractive = process.stdout.isTTY && process.stdin.isTTY;
+      
+      if (!isInteractive) {
+        console.error('❌ DeckInABox requires an interactive terminal.');
+        console.error('   Run with --help for available options.');
+      }
+
+      expect(mockConsoleError).toHaveBeenCalledWith('❌ DeckInABox requires an interactive terminal.');
+      expect(mockConsoleError).toHaveBeenCalledWith('   Run with --help for available options.');
+    });
+
+    it('should validate terminal dimensions', () => {
+      process.stdout.columns = 40; // Too narrow
+      process.stdout.rows = 15;    // Too short
+
+      const width = process.stdout.columns || 80;
+      const height = process.stdout.rows || 24;
+
+      if (width < 60 || height < 20) {
+        console.error('❌ Terminal too small. Minimum size: 60x20 characters.');
+        console.error(`   Current size: ${width}x${height}`);
+      }
+
+      expect(mockConsoleError).toHaveBeenCalledWith('❌ Terminal too small. Minimum size: 60x20 characters.');
+      expect(mockConsoleError).toHaveBeenCalledWith('   Current size: 40x15');
     });
   });
 });

@@ -41,9 +41,31 @@ global.mockTerminalCapabilities = {
   supportsScreenClear: true,
 };
 
+// Mock import.meta for ES module compatibility
+Object.defineProperty(globalThis, 'import', {
+  value: {
+    meta: {
+      url: 'file:///test/mock-url'
+    }
+  }
+});
+
 // Mock React components for testing
 jest.mock('ink', () => ({
   render: jest.fn(() => ({ unmount: jest.fn() })),
   Box: ({ children }: any) => children,
   Text: ({ children }: any) => children,
+  useInput: jest.fn(),
+  useApp: jest.fn(() => ({ exit: jest.fn() })),
+}));
+
+// Mock ink-testing-library
+jest.mock('ink-testing-library', () => ({
+  render: jest.fn(() => ({
+    container: { innerHTML: '' },
+    getByText: jest.fn((text: string) => ({ textContent: text })),
+    queryByText: jest.fn(() => null),
+    unmount: jest.fn(),
+    rerender: jest.fn(),
+  })),
 }));

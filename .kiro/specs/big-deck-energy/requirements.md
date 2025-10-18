@@ -19,6 +19,7 @@ BigDeckEnergy (BDE) is a flexible TypeScript card game library distributed as an
 - **Participant**: An entity that participates in a card game instance, can be a human player or NPC
 - **Hand**: A collection of piles and placements belonging to a participant
 - **Game_State**: The current condition of all game elements including player hands, deck status, and game progress
+- **Party**: An optional team structure containing multiple participants with shared piles, placements, and status
 
 ## Requirements
 
@@ -129,3 +130,15 @@ uirement 6
 3. THE BigDeckEnergy SHALL maintain a complete history of all game states as a linked list of immutable snapshots with action descriptions
 4. WHEN any game state change occurs, THE BigDeckEnergy SHALL generate a new immutable state snapshot linked to the previous state with a detailed action description
 5. THE BigDeckEnergy SHALL output the complete game history containing all state transitions and action descriptions for every change that occurs during gameplay
+
+### Requirement 10
+
+**User Story:** As a game developer, I want an optional party system for team-based card games, so that I can create games where multiple participants work together as teams with shared resources and status.
+
+#### Acceptance Criteria
+
+1. THE BigDeckEnergy SHALL provide an optional party interface that contains multiple participants as team members
+2. THE BigDeckEnergy SHALL allow parties to have piles and placements for shared card storage separate from individual participant hands
+3. THE BigDeckEnergy SHALL support party status tracking for team-specific game state information
+4. WHERE parties are used, THE BigDeckEnergy SHALL allow participants to belong to zero or one party at any time
+5. THE BigDeckEnergy SHALL ensure that games can function normally without using the party system when team mechanics are not needed
