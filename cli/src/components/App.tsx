@@ -6,6 +6,7 @@ import { discoverGames } from '../utils/game-discovery';
 import { ErrorBoundary } from './ErrorBoundary';
 import { MainMenu } from './MainMenu';
 import { GameSetup } from './GameSetup';
+import { GameStateRenderer } from './GameStateRenderer';
 
 interface AppProps {
   debugMode: boolean;
@@ -303,23 +304,60 @@ interface GameScreenProps {
 
 const GameScreen: React.FC<GameScreenProps> = ({ 
   game, 
+  gameInstance,
   players, 
   currentPlayer, 
-  gamePhase 
-}) => (
-  <Box flexDirection="column">
-    <Box marginBottom={1}>
-      <Text bold>🎮 Game: {game?.displayName || 'Unknown'}</Text>
-    </Box>
-    
-    <Box marginBottom={1}>
-      <Text dimColor>Phase: {gamePhase} | Players: {players.length}</Text>
-      {currentPlayer && <Text dimColor>Current Player: {currentPlayer}</Text>}
-    </Box>
-    
+  gamePhase,
+  terminalSize,
+  onBackToMenu,
+  onError
+}) => {
+  // If we have a game instance with state, use the GameStateRenderer
+  if (gameInstance && gameInstance.getState && game && currentPlayer) {
+    try {
+      const gameState = gameInstance.getState();
+      const uiAdapter = new (require('./UIAdapter').DefaultUIAdapter)();
+      
+      return (
+        <GameStateRenderer
+          gameConfiguration={game}
+          gameState={gameState}
+          currentPlayer={currentPlayer}
+          uiAdapter={uiAdapter}
+          terminalSize={terminalSize}
+          onPlayerAction={(action) => {
+            try {
+              // Process the action through the game instance
+              gameInstance.processAction(action);
+            } catch (error) {
+              onError(`Action failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+          }}
+          onBackToMenu={onBackToMenu}
+          onError={onError}
+        />
+      );
+    } catch (error) {
+      onError(`Failed to render game: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  // Fallback for when game is not fully initialized
+  return (
     <Box flexDirection="column">
-      <Text dimColor>Game interface will be implemented in future tasks...</Text>
-      <Text dimColor>Press 'q' to return to menu</Text>
+      <Box marginBottom={1}>
+        <Text bold>🎮 Game: {game?.displayName || 'Unknown'}</Text>
+      </Box>
+      
+      <Box marginBottom={1}>
+        <Text dimColor>Phase: {gamePhase} | Players: {players.length}</Text>
+        {currentPlayer && <Text dimColor>Current Player: {currentPlayer}</Text>}
+      </Box>
+      
+      <Box flexDirection="column">
+        <Text dimColor>Initializing game interface...</Text>
+        <Text dimColor>Press 'q' to return to menu</Text>
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
