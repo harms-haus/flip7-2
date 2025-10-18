@@ -1,9 +1,11 @@
 import React from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text } from 'ink';
 import { GameState, Hand, Gameboard } from 'big-deck-energy';
 import { GameConfiguration } from '../types/game-configuration';
 import { UIAdapter } from '../types/ui-adapter';
 import { ActionDefinition } from '../types/actions';
+import { GameLoop } from '../engine/game-loop';
+import { GameInputManager } from './GameInputManager';
 
 interface GameStateRendererProps {
   /** The game configuration that defines how to render this game */
@@ -20,6 +22,9 @@ interface GameStateRendererProps {
   
   /** Terminal size for responsive layout */
   terminalSize: { width: number; height: number };
+  
+  /** Game loop instance for processing actions */
+  gameLoop?: GameLoop;
   
   /** Callback when player performs an action */
   onPlayerAction: (action: any) => void;
@@ -41,12 +46,14 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
   currentPlayer,
   uiAdapter,
   terminalSize,
+  gameLoop,
   onPlayerAction,
   onBackToMenu,
   onError,
 }) => {
   const [selectedCardIndex, setSelectedCardIndex] = React.useState<number | null>(null);
   const [availableActions, setAvailableActions] = React.useState<ActionDefinition[]>([]);
+  const [inputEnabled, setInputEnabled] = React.useState(true);
 
   // Update available actions when game state or current player changes
   React.useEffect(() => {
@@ -58,53 +65,58 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
     }
   }, [gameState, currentPlayer, gameConfiguration, onError]);
 
-  // Handle keyboard input
-  useInput((input, key) => {
+  // Handle actions from the input manager
+  const handleInputAction = React.useCallback((action: any) => {
     try {
-      // Handle global shortcuts
-      if (key.escape || input === 'q') {
-        onBackToMenu();
-        return;
-      }
-
-      // Handle card selection navigation
-      if (key.leftArrow || key.rightArrow) {
-        const currentPlayerHand = gameState.participants.find(p => p.id === currentPlayer)?.hand;
-        if (currentPlayerHand && currentPlayerHand.cards.length > 0) {
-          const maxIndex = currentPlayerHand.cards.length - 1;
-          if (key.leftArrow) {
-            setSelectedCardIndex(prev => 
-              prev === null ? maxIndex : Math.max(0, prev - 1)
-            );
-          } else {
-            setSelectedCardIndex(prev => 
-              prev === null ? 0 : Math.min(maxIndex, prev + 1)
-            );
+      // Handle special navigation actions
+      if (action.type === 'navigate') {
+        const direction = action.payload?.direction;
+        if (direction === 'left' || direction === 'right') {
+          const currentPlayerHand = gameState.participants.find(p => p.id === currentPlayer)?.hand;
+          if (currentPlayerHand && currentPlayerHand.cards.length > 0) {
+            const maxIndex = currentPlayerHand.cards.length - 1;
+            if (direction === 'left') {
+              setSelectedCardIndex(prev => 
+                prev === null ? maxIndex : Math.max(0, prev - 1)
+              );
+            } else {
+              setSelectedCardIndex(prev => 
+                prev === null ? 0 : Math.min(maxIndex, prev + 1)
+              );
+            }
           }
         }
         return;
       }
 
-      // Clear selection on escape
-      if (key.escape) {
-        setSelectedCardIndex(null);
+      // Handle escape/quit actions
+      if (action.type === 'escape' || action.type === 'quit') {
+        onBackToMenu();
         return;
       }
 
-      // Delegate input handling to game configuration
-      gameConfiguration.handlePlayerInput(input, gameState)
-        .then(action => {
-          if (action) {
-            onPlayerAction(action);
-          }
-        })
-        .catch(error => {
-          onError(`Invalid action: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        });
+      // Pass other actions to the callback
+      onPlayerAction(action);
     } catch (error) {
-      onError(`Input handling error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      onError(`Action handling error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  });
+  }, [gameState, currentPlayer, onPlayerAction, onBackToMenu, onError]);
+
+  // Handle action processing feedback
+  const handleActionProcessed = React.useCallback((action: any) => {
+    // Action was successfully processed
+    // Could add visual feedback here
+  }, []);
+
+  // Handle action rejection feedback
+  const handleActionRejected = React.useCallback((action: any, reason: string) => {
+    onError(`Action rejected: ${reason}`);
+  }, [onError]);
+
+  // Handle input errors
+  const handleInputError = React.useCallback((error: string) => {
+    onError(`Input error: ${error}`);
+  }, [onError]);
 
   // Calculate layout areas based on terminal size
   const layout = calculateGameLayout(terminalSize);
@@ -147,13 +159,28 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
           )}
         </Box>
 
-        {/* Action menu and status */}
+        {/* Input Manager and Action Menu */}
         <Box marginTop={1}>
-          <GameFooter
-            availableActions={availableActions}
-            uiAdapter={uiAdapter}
-            terminalWidth={terminalSize.width}
-          />
+          {gameLoop ? (
+            <GameInputManager
+              gameLoop={gameLoop}
+              availableActions={availableActions}
+              currentPlayer={currentPlayer}
+              enabled={inputEnabled}
+              context="game"
+              showActionMenu={true}
+              showFeedback={true}
+              onActionProcessed={handleActionProcessed}
+              onActionRejected={handleActionRejected}
+              onInputError={handleInputError}
+            />
+          ) : (
+            <GameFooter
+              availableActions={availableActions}
+              uiAdapter={uiAdapter}
+              terminalWidth={terminalSize.width}
+            />
+          )}
         </Box>
       </Box>
     );

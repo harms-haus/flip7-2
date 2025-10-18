@@ -139,26 +139,26 @@
     - Test responsive layout behavior at different terminal sizes
     - _Requirements: 3.5_
 
-- [ ] 8. Implement input handling and player interaction
-  - [ ] 8.1 Create input handler system
+- [x] 8. Implement input handling and player interaction
+  - [x] 8.1 Create input handler system
     - Build keyboard input processing using Ink's useInput hook
     - Implement action mapping from key presses to game actions
     - Add input validation and error feedback for invalid actions
     - _Requirements: 4.1, 4.2, 4.4_
 
-  - [ ] 8.2 Build action menu and selection interfaces
+  - [x] 8.2 Build action menu and selection interfaces
     - Create dynamic action menus based on available game actions
     - Implement card selection interface with keyboard navigation
     - Add confirmation dialogs for important actions
     - _Requirements: 4.1, 4.2_
 
-  - [ ] 8.3 Integrate input with game loop
+  - [x] 8.3 Integrate input with game loop
     - Connect input handlers to GameLoop action processing
     - Implement input queuing for rapid key presses
     - Add input debouncing to prevent accidental double actions
     - _Requirements: 4.2, 4.3_
 
-  - [ ] 8.4 Write input handling tests
+  - [x] 8.4 Write input handling tests
     - Test keyboard input processing and action mapping
     - Test input validation and error handling
     - Test integration between input system and game loop
