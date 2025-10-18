@@ -156,7 +156,7 @@ export class SnapshotSystem {
    */
   private static deepCopyGameState(gameState: GameState): GameState {
     // Use serialization for deep copying - this ensures we get all nested objects
-    const serialized = SerializationEngine.serialize(gameState);
+    const serialized = SerializationEngine.serialize(gameState as any);
     return SerializationEngine.deserialize(serialized);
   }
   

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { ApplicationState, ApplicationScreen } from '../types';
-import { detectTerminalCapabilities } from '../utils/terminal-detection';
-import { discoverGames } from '../utils/game-discovery';
-import { ErrorBoundary } from './ErrorBoundary';
-import { MainMenu } from './MainMenu';
-import { GameSetup } from './GameSetup';
-import { GameStateRenderer } from './GameStateRenderer';
+import { detectTerminalCapabilities } from '../utils/terminal-detection.js';
+import { discoverGames } from '../utils/game-discovery.js';
+import { ErrorBoundary } from './ErrorBoundary.js';
+import { MainMenu } from './MainMenu.js';
+import { GameSetup } from './GameSetup.js';
+import { GameStateRenderer } from './GameStateRenderer.js';
 
 interface AppProps {
   debugMode: boolean;

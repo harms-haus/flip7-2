@@ -240,7 +240,7 @@ export class SerializationEngine {
   /**
    * Check compatibility of serialized data
    */
-  public static checkCompatibility(json: string): CompatibilityResult {
+  public static checkCompatibility(json: string): SerializationCompatibilityResult {
     try {
       const parsed = JSON.parse(json);
       const detectedVersion = this.detectVersion(parsed);
@@ -355,7 +355,7 @@ export class SerializationEngine {
       snapshotIndex[snapshot.id] = index;
       
       // Serialize the game state
-      const serializedGameState = this.serializeGameState(snapshot.gameState);
+      const serializedGameState = this.serializeGameState(snapshot.gameState as any);
       
       return {
         id: snapshot.id,
@@ -961,7 +961,7 @@ export class SerializationEngine {
 /**
  * Compatibility result with detailed information
  */
-export interface CompatibilityResult {
+export interface SerializationCompatibilityResult {
   /** Whether versions are directly compatible */
   compatible: boolean;
   

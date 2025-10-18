@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text } from 'ink';
 import { ActionDefinition } from '../types/actions';
-import { GameAction } from '../engine/game-loop';
 
 /**
  * Props for ActionMenu component.
@@ -74,41 +73,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
   // Calculate visible actions based on scroll offset
   const visibleActions = enabledActions.slice(scrollOffset, scrollOffset + maxVisible);
 
-  // Handle navigation
-  const handleNavigation = useCallback((direction: 'up' | 'down') => {
-    if (totalActions === 0) return;
-
-    let newIndex = currentIndex;
-    
-    if (direction === 'up') {
-      newIndex = currentIndex > 0 ? currentIndex - 1 : totalActions - 1;
-    } else {
-      newIndex = currentIndex < totalActions - 1 ? currentIndex + 1 : 0;
-    }
-
-    setCurrentIndex(newIndex);
-
-    // Update scroll offset if needed
-    if (newIndex < scrollOffset) {
-      setScrollOffset(newIndex);
-    } else if (newIndex >= scrollOffset + maxVisible) {
-      setScrollOffset(newIndex - maxVisible + 1);
-    }
-
-    if (onNavigate) {
-      onNavigate(direction, newIndex);
-    }
-  }, [currentIndex, totalActions, scrollOffset, maxVisible, onNavigate]);
-
-  // Handle action selection
-  const handleSelection = useCallback(() => {
-    if (totalActions > 0 && currentIndex >= 0 && currentIndex < totalActions) {
-      const selectedAction = enabledActions[currentIndex];
-      if (onActionSelect) {
-        onActionSelect(selectedAction, currentIndex);
-      }
-    }
-  }, [currentIndex, totalActions, enabledActions, onActionSelect]);
+  // Navigation and selection handlers would go here if needed
 
   // Render individual action item
   const renderActionItem = (action: ActionDefinition, index: number, isSelected: boolean) => {
@@ -118,7 +83,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
       keyBindingColor: style.keyBindingColor || 'cyan',
     };
 
-    const displayIndex = scrollOffset + index;
+
     const isCurrentlySelected = isSelected && isActive;
 
     return (

@@ -1,4 +1,4 @@
 // Core types barrel export
-export * from './enums';
-export * from './game-phase';
-export * from './card-orientation';
+export * from './enums.js';
+export * from './game-phase.js';
+export * from './card-orientation.js';

@@ -125,12 +125,12 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   }, [actionId, onCancel, onDecision]);
 
   // Handle selection change
-  const handleSelectionChange = useCallback((confirm: boolean) => {
+  const _handleSelectionChange = useCallback((confirm: boolean) => {
     setSelectedOption(confirm);
   }, []);
 
   // Handle decision based on current selection
-  const handleDecision = useCallback(() => {
+  const _handleDecision = useCallback(() => {
     if (selectedOption) {
       handleConfirm();
     } else {
@@ -160,7 +160,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       </Box>
 
       {/* Message */}
-      <Box marginBottom={2} textWrap="wrap">
+      <Box marginBottom={2}>
         <Text>{message}</Text>
       </Box>
 
@@ -287,8 +287,8 @@ export const ConfirmationUtils = {
    * Create a promise-based confirmation dialog.
    */
   createPromiseConfirmation: (
-    message: string,
-    title?: string
+    _message: string,
+    _title?: string
   ): Promise<boolean> => {
     return new Promise((resolve) => {
       // This would typically be implemented with a global dialog manager

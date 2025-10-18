@@ -330,7 +330,7 @@ export const GameInputManager: React.FC<GameInputManagerProps> = ({
             showKeyBindings={true}
             showDescriptions={false}
             onActionSelect={handleActionMenuSelect}
-            onNavigate={(direction, newIndex) => setSelectedActionIndex(newIndex)}
+            onNavigate={(_direction, newIndex) => setSelectedActionIndex(newIndex)}
           />
         </Box>
       )}
@@ -378,8 +378,8 @@ export const GameInputManager: React.FC<GameInputManagerProps> = ({
  */
 export const useGameInput = (
   gameLoop: GameLoop,
-  availableActions: ActionDefinition[],
-  currentPlayer: string
+  _availableActions: ActionDefinition[],
+  _currentPlayer: string
 ) => {
   const [inputEnabled, setInputEnabled] = useState(true);
   const [actionQueue, setActionQueue] = useState<GameAction[]>([]);

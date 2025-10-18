@@ -1007,7 +1007,7 @@ export class GameStateAPIImpl implements GameStateAPI {
     const action: ActionDescriptor = {
       type: actionType,
       description,
-      participantId,
+      ...(participantId !== undefined && { participantId }),
       details,
       timestamp: Date.now()
     };

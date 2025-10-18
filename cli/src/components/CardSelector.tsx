@@ -125,7 +125,7 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
   });
 
   // Handle navigation
-  const handleNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+  const _handleNavigation = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (totalCards === 0) return;
 
     const { row, col } = getRowCol(currentFocus);
@@ -189,7 +189,7 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
   }, [currentFocus, totalCards, cardsPerRow, rows, onNavigate]);
 
   // Handle card selection
-  const handleSelection = useCallback((index: number) => {
+  const _handleSelection = useCallback((index: number) => {
     let newSelection = [...currentSelection];
 
     switch (selectionMode) {
@@ -234,7 +234,7 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
   }, [currentSelection, selectionMode, maxSelections, rangeStart, cards, onSelectionChange]);
 
   // Handle confirmation
-  const handleConfirm = useCallback(() => {
+  const _handleConfirm = useCallback(() => {
     const result: CardSelectionResult = {
       selectedCards: currentSelection.map(i => cards[i]),
       selectedIndices: currentSelection,
@@ -263,15 +263,17 @@ export const CardSelector: React.FC<CardSelectorProps> = ({
         <Box position="relative">
           <CardRenderer
             card={card}
-            showFace={showFaces}
-            highlight={isFocused}
-            size={cardSize}
-            selectable={true}
+            options={{
+              showFace: showFaces,
+              highlight: isFocused,
+              size: cardSize,
+              selectable: true
+            }}
           />
           
           {/* Selection indicators */}
           {showSelectionIndicators && (
-            <Box position="absolute" top={0} left={0}>
+            <Box>
               {isSelected && (
                 <Text color={cardStyle.selectedColor} bold>✓</Text>
               )}

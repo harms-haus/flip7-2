@@ -312,7 +312,7 @@ export class HistoryManager {
       const snapshot = chronologicalSnapshots[i];
       
       // Serialize the game state
-      const serializedGameState = JSON.parse(SerializationEngine.serialize(snapshot.gameState));
+      const serializedGameState = JSON.parse(SerializationEngine.serialize(snapshot.gameState as any));
       
       const serializedSnapshot: SerializedSnapshot = {
         id: snapshot.id,

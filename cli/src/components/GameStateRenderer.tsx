@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { GameState, Hand, Gameboard } from 'big-deck-energy';
+import { GameState } from 'big-deck-energy';
 import { GameConfiguration } from '../types/game-configuration';
 import { UIAdapter } from '../types/ui-adapter';
 import { ActionDefinition } from '../types/actions';
@@ -53,7 +53,7 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
 }) => {
   const [selectedCardIndex, setSelectedCardIndex] = React.useState<number | null>(null);
   const [availableActions, setAvailableActions] = React.useState<ActionDefinition[]>([]);
-  const [inputEnabled, setInputEnabled] = React.useState(true);
+  const [inputEnabled, _setInputEnabled] = React.useState(true);
 
   // Update available actions when game state or current player changes
   React.useEffect(() => {
@@ -66,15 +66,16 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
   }, [gameState, currentPlayer, gameConfiguration, onError]);
 
   // Handle actions from the input manager
-  const handleInputAction = React.useCallback((action: any) => {
+  const _handleInputAction = React.useCallback((action: any) => {
     try {
       // Handle special navigation actions
       if (action.type === 'navigate') {
         const direction = action.payload?.direction;
         if (direction === 'left' || direction === 'right') {
-          const currentPlayerHand = gameState.participants.find(p => p.id === currentPlayer)?.hand;
-          if (currentPlayerHand && currentPlayerHand.cards.length > 0) {
-            const maxIndex = currentPlayerHand.cards.length - 1;
+          const currentParticipant = gameState.participants.get(currentPlayer);
+          const currentPlayerHand = currentParticipant ? gameState.getParticipantHands(currentPlayer)[0] : undefined;
+          if (currentPlayerHand && currentPlayerHand.getTotalCardCount() > 0) {
+            const maxIndex = currentPlayerHand.getTotalCardCount() - 1;
             if (direction === 'left') {
               setSelectedCardIndex(prev => 
                 prev === null ? maxIndex : Math.max(0, prev - 1)
@@ -103,13 +104,13 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
   }, [gameState, currentPlayer, onPlayerAction, onBackToMenu, onError]);
 
   // Handle action processing feedback
-  const handleActionProcessed = React.useCallback((action: any) => {
+  const _handleActionProcessed = React.useCallback((_action: any) => {
     // Action was successfully processed
     // Could add visual feedback here
   }, []);
 
   // Handle action rejection feedback
-  const handleActionRejected = React.useCallback((action: any, reason: string) => {
+  const _handleActionRejected = React.useCallback((_action: any, reason: string) => {
     onError(`Action rejected: ${reason}`);
   }, [onError]);
 
@@ -170,8 +171,8 @@ export const GameStateRenderer: React.FC<GameStateRendererProps> = ({
               context="game"
               showActionMenu={true}
               showFeedback={true}
-              onActionProcessed={handleActionProcessed}
-              onActionRejected={handleActionRejected}
+              onActionProcessed={_handleActionProcessed}
+              onActionRejected={_handleActionRejected}
               onInputError={handleInputError}
             />
           ) : (
@@ -208,7 +209,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   currentPlayer,
   uiAdapter,
 }) => {
-  const currentPlayerName = gameState.participants.find(p => p.id === currentPlayer)?.name || currentPlayer;
+  const currentPlayerName = gameState.participants.get(currentPlayer)?.name || currentPlayer;
   
   return uiAdapter.createBox(
     <Box flexDirection="row" justifyContent="space-between">
@@ -248,9 +249,9 @@ const PlayerHandDisplay: React.FC<PlayerHandDisplayProps> = ({
   uiAdapter,
   layout,
 }) => {
-  const currentPlayerData = gameState.participants.find(p => p.id === currentPlayer);
+  const currentPlayerData = gameState.participants.get(currentPlayer);
   
-  if (!currentPlayerData || !currentPlayerData.hand) {
+  if (!currentPlayerData) {
     return (
       <Box>
         <Text color="gray">No hand data available</Text>
@@ -260,12 +261,13 @@ const PlayerHandDisplay: React.FC<PlayerHandDisplayProps> = ({
 
   try {
     // Use game configuration to render the player's hand
-    const handDisplay = gameConfiguration.renderPlayerHand(currentPlayerData.hand, true);
+    const playerHands = gameState.getParticipantHands(currentPlayerData.id);
+    const handDisplay = playerHands.length > 0 ? gameConfiguration.renderPlayerHand(playerHands[0], true) : null;
     
     return uiAdapter.createBox(
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text bold>Your Hand ({currentPlayerData.hand.cards.length} cards)</Text>
+          <Text bold>Your Hand ({playerHands.reduce((sum, hand) => sum + hand.getTotalCardCount(), 0)} cards)</Text>
           {selectedCardIndex !== null && (
             <Text color="yellow"> - Card {selectedCardIndex + 1} selected</Text>
           )}

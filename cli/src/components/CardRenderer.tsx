@@ -224,8 +224,7 @@ export const GameBoardRenderer: React.FC<{
   terminalSize: { width: number; height: number };
 }> = ({ areas, terminalSize }) => {
   // Calculate grid layout based on terminal size
-  const gridWidth = Math.floor(terminalSize.width / 12); // Assuming medium card width
-  const gridHeight = Math.floor(terminalSize.height / 6); // Assuming medium card height
+  // Grid calculations would go here if needed for layout
 
   return (
     <Box flexDirection="column" width={terminalSize.width} height={terminalSize.height}>

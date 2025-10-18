@@ -3,10 +3,12 @@
 import { Command } from 'commander';
 import { render } from 'ink';
 import React from 'react';
-import { App } from './components/App';
-import { version } from '../package.json';
-import { detectTerminalCapabilities } from './utils/terminal-detection';
-import { discoverGames } from './utils/game-discovery';
+import { App } from './components/App.js';
+// Version is injected by esbuild
+declare const __VERSION__: string;
+const version = __VERSION__;
+import { detectTerminalCapabilities } from './utils/terminal-detection.js';
+import { discoverGames } from './utils/game-discovery.js';
 
 const program = new Command();
 

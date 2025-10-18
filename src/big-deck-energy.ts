@@ -48,22 +48,22 @@
  * @since 1.0.0
  */
 
-import { GameInstance, GameInstanceConfig, GameCreationResult } from './engine/game-instance';
-import { CompatibilityValidator, CompatibilityResult } from './engine/compatibility';
-import { Ruleset } from './core/interfaces/ruleset';
-import { DeckType } from './core/interfaces/deck-type';
-import { GameState as IGameState } from './core/interfaces/game-state';
-import { GameState } from './models/game-state';
-import { SerializationEngine } from './engine/serialization';
+import { GameInstance, GameInstanceConfig, GameCreationResult } from './engine/game-instance.js';
+import { CompatibilityValidator, CompatibilityResult } from './engine/compatibility.js';
+import { Ruleset } from './core/interfaces/ruleset.js';
+import { DeckType } from './core/interfaces/deck-type.js';
+import { GameState as IGameState } from './core/interfaces/game-state.js';
+import { GameState } from './models/game-state.js';
+import { SerializationEngine } from './engine/serialization.js';
 
 // Import built-in deck types
-import { StandardPlayingDeck } from './deck-types/standard/standard-playing-deck';
-import { CustomDeckType } from './deck-types/custom/custom-deck-type';
-import { MonopolyPropertyDeck } from './deck-types/monopoly/monopoly-property-deck';
+import { StandardPlayingDeck } from './deck-types/standard/standard-playing-deck.js';
+import { CustomDeckType } from './deck-types/custom/custom-deck-type.js';
+import { MonopolyPropertyDeck } from './deck-types/monopoly/monopoly-property-deck.js';
 
 // Import built-in rulesets
-import { WarRuleset } from './rulesets/war/war-ruleset';
-import { GoFishRuleset } from './rulesets/go-fish/go-fish-ruleset';
+import { WarRuleset } from './rulesets/war/war-ruleset.js';
+import { GoFishRuleset } from './rulesets/go-fish/go-fish-ruleset.js';
 
 /**
  * Configuration options for BigDeckEnergy library

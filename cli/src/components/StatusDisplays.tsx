@@ -23,19 +23,23 @@ export const PlayerInfoPanel: React.FC<{
   showHandSizes = true,
   compact = false 
 }) => {
-  const currentPlayerData = players.find(p => p.id === currentPlayer);
+  const _currentPlayerData = players.find(p => p.id === currentPlayer);
   
   if (compact) {
     return (
       <Box flexDirection="row">
-        {players.map((player, index) => (
+        {players.map((player, _index) => (
           <Box key={player.id} marginRight={2}>
             <Text 
               color={player.id === currentPlayer ? 'yellow' : 'white'}
               bold={player.id === currentPlayer}
             >
               {player.name}
-              {showHandSizes && player.hand && ` (${player.hand.cards.length})`}
+              {showHandSizes && (() => {
+                const hands = gameState.getParticipantHands(player.id);
+                const totalCards = hands.reduce((sum, hand) => sum + hand.getTotalCardCount(), 0);
+                return totalCards > 0 ? ` (${totalCards})` : '';
+              })()}
             </Text>
           </Box>
         ))}
@@ -49,7 +53,7 @@ export const PlayerInfoPanel: React.FC<{
         <Text bold color="cyan">Players</Text>
       </Box>
       
-      {players.map((player, index) => (
+      {players.map((player, _index) => (
         <Box key={player.id} marginBottom={1} flexDirection="column">
           <Box flexDirection="row" justifyContent="space-between">
             <Box>
@@ -63,13 +67,17 @@ export const PlayerInfoPanel: React.FC<{
             </Box>
             
             <Box flexDirection="row">
-              {showHandSizes && player.hand && (
-                <Box marginRight={2}>
-                  <Text color="gray">
-                    Cards: {player.hand.cards.length}
-                  </Text>
-                </Box>
-              )}
+              {showHandSizes && (() => {
+                const hands = gameState.getParticipantHands(player.id);
+                const totalCards = hands.reduce((sum, hand) => sum + hand.getTotalCardCount(), 0);
+                return totalCards > 0 ? (
+                  <Box marginRight={2}>
+                    <Text color="gray">
+                      Cards: {totalCards}
+                    </Text>
+                  </Box>
+                ) : null;
+              })()}
               
               {showScores && (
                 <Box>
@@ -113,7 +121,7 @@ export const GamePhaseIndicator: React.FC<{
   showTurnTimer = false, 
   turnTimeRemaining 
 }) => {
-  const currentPlayerName = gameState.participants.find(p => p.id === currentPlayer)?.name || currentPlayer;
+  const currentPlayerName = gameState.participants.get(currentPlayer)?.name || currentPlayer;
   const phase = getGamePhase(gameState);
   
   return uiAdapter.createBox(
@@ -330,7 +338,7 @@ const MessageItem: React.FC<{
         {getMessageIcon(message.type)} {message.text}
       </Text>
       {showTimestamp && (
-        <Text color="gray" marginLeft={1}>
+        <Text color="gray">
           [{message.timestamp.toLocaleTimeString()}]
         </Text>
       )}
@@ -345,7 +353,9 @@ const PlayerStatusIndicators: React.FC<{
   const indicators: string[] = [];
   
   // Add game-specific status indicators
-  if (player.hand && player.hand.cards.length === 0) {
+  const hands = gameState.getParticipantHands(player.id);
+  const totalCards = hands.reduce((sum, hand) => sum + hand.getTotalCardCount(), 0);
+  if (totalCards === 0) {
     indicators.push('No cards');
   }
   
@@ -375,8 +385,11 @@ const GamePhaseDetails: React.FC<{
   // This would be customized based on the specific game
   // For now, show basic information
   
-  const totalCards = gameState.participants.reduce(
-    (sum, p) => sum + (p.hand?.cards.length || 0), 
+  const totalCards = Array.from(gameState.participants.values()).reduce(
+    (sum, p) => {
+      const hands = gameState.getParticipantHands(p.id);
+      return sum + hands.reduce((handSum, hand) => handSum + hand.getTotalCardCount(), 0);
+    }, 
     0
   );
   
@@ -387,7 +400,7 @@ const GamePhaseDetails: React.FC<{
       </Text>
       {gameState.gameboard && (
         <Text color="gray">
-          Cards on board: {gameState.gameboard.areas?.length || 0} areas
+          Cards on board: {gameState.gameboard.piles.size} piles
         </Text>
       )}
     </Box>
@@ -399,10 +412,11 @@ const GamePhaseDetails: React.FC<{
 function getPlayerScore(player: Participant, gameState: GameState): number {
   // This would be game-specific logic
   // For now, return a placeholder
-  return player.hand?.cards.length || 0;
+  const hands = gameState.getParticipantHands(player.id);
+  return hands.reduce((sum, hand) => sum + hand.getTotalCardCount(), 0);
 }
 
-function getGamePhase(gameState: GameState): string {
+function getGamePhase(_gameState: GameState): string {
   // This would be extracted from the game state
   // For now, return a placeholder
   return 'Playing';
@@ -420,8 +434,11 @@ function calculateGameStats(gameState: GameState): GameStats {
   // This would calculate actual game statistics
   // For now, return placeholder data
   
-  const totalCards = gameState.participants.reduce(
-    (sum, p) => sum + (p.hand?.cards.length || 0), 
+  const totalCards = Array.from(gameState.participants.values()).reduce(
+    (sum, p) => {
+      const hands = gameState.getParticipantHands(p.id);
+      return sum + hands.reduce((handSum, hand) => handSum + hand.getTotalCardCount(), 0);
+    }, 
     0
   );
   

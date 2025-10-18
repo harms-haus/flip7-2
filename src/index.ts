@@ -6,8 +6,8 @@
  */
 
 // Export main library class
-export { BigDeckEnergy, BigDeckEnergyUtils } from './big-deck-energy';
-export type { BigDeckEnergyConfig } from './big-deck-energy';
+export { BigDeckEnergy, BigDeckEnergyUtils } from './big-deck-energy.js';
+export type { BigDeckEnergyConfig } from './big-deck-energy.js';
 
 // Export core interfaces with 'I' prefix to avoid conflicts with model implementations
 export type {
@@ -21,37 +21,37 @@ export type {
   Gameboard as IGameboard,
   Hand as IHand,
   Participant as IParticipant
-} from './core/interfaces';
+} from './core/interfaces/index.js';
 
 // Export other core interfaces without conflicts
-export * from './core/interfaces/deck-type';
-export * from './core/interfaces/ruleset';
-export * from './core/interfaces/events';
-export * from './core/interfaces/api';
+export * from './core/interfaces/deck-type.js';
+export * from './core/interfaces/ruleset.js';
+export * from './core/interfaces/events.js';
+export * from './core/interfaces/api.js';
 
 // Export types and enums
-export * from './core/types';
+export * from './core/types/index.js';
 
 // Export error classes
-export * from './core/errors';
+export * from './core/errors/index.js';
 
 // Export model implementations (concrete classes)
-export * from './models';
+export * from './models/index.js';
 
 // Export Game State API
-export * from './api';
+export * from './api/index.js';
 
 // Export utility functions
-export * from './utils';
+export * from './utils/index.js';
 
 // Export engine components
-export * from './engine';
+export * from './engine/index.js';
 
 // Export built-in deck types
-export * from './deck-types';
+export * from './deck-types/index.js';
 
 // Export built-in rulesets
-export * from './rulesets';
+export * from './rulesets/index.js';
 
 // Default export for convenience
-export { BigDeckEnergy as default } from './big-deck-energy';
+export { BigDeckEnergy as default } from './big-deck-energy.js';
