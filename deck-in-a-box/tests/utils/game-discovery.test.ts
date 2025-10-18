@@ -9,6 +9,19 @@ jest.mock('fs', () => ({
   },
 }));
 
+// Mock path module for consistent testing
+jest.mock('path', () => ({
+  ...jest.requireActual('path'),
+  resolve: jest.fn(),
+  join: jest.fn(),
+  dirname: jest.fn(),
+}));
+
+// Mock path resolver
+jest.mock('../../src/utils/path-resolver', () => ({
+  getCurrentDirname: jest.fn(() => '/test/mock-path'),
+}));
+
 describe('Game Discovery System', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -18,7 +31,7 @@ describe('Game Discovery System', () => {
     it('should return empty array when games directory does not exist', async () => {
       (fs.access as jest.Mock).mockRejectedValue(new Error('Directory not found'));
 
-      const games = await discoverGames();
+      const games = await discoverGames('/test/games');
       expect(games).toEqual([]);
     });
 
@@ -26,7 +39,7 @@ describe('Game Discovery System', () => {
       (fs.access as jest.Mock).mockResolvedValue(undefined);
       (fs.readdir as jest.Mock).mockResolvedValue([]);
 
-      const games = await discoverGames();
+      const games = await discoverGames('/test/games');
       expect(games).toEqual([]);
     });
 
@@ -38,9 +51,17 @@ describe('Game Discovery System', () => {
       ]);
 
       // Mock the game loading to fail for testing
-      const games = await discoverGames();
+      const games = await discoverGames('/test/games');
       // Since we can't easily mock the dynamic imports in this test,
       // we expect an empty array (games that failed to load)
+      expect(games).toEqual([]);
+    });
+
+    it('should handle file system errors gracefully', async () => {
+      (fs.access as jest.Mock).mockResolvedValue(undefined);
+      (fs.readdir as jest.Mock).mockRejectedValue(new Error('Permission denied'));
+
+      const games = await discoverGames('/test/games');
       expect(games).toEqual([]);
     });
   });

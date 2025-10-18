@@ -46,7 +46,7 @@
     - Create consistent text output patterns
     - _Requirements: 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 3.4 Fix game discovery system tests
+  - [x] 3.4 Fix game discovery system tests
     - Fix import.meta.url compatibility issues in test environment
     - Test plugin loading with valid and invalid game configurations
     - Test game registry functionality and error handling

@@ -1,12 +1,45 @@
-import { Card, Participant } from 'big-deck-energy';
-import { DefaultUIAdapter } from '../../src/components/UIAdapter';
-import { ActionDefinition } from '../../src/types/actions';
+// Mock big-deck-energy first
+jest.mock('big-deck-energy', () => ({
+  Card: jest.fn().mockImplementation((id: string, properties: Record<string, any> = {}) => ({
+    id,
+    properties,
+    faceUp: true,
+    orientation: 'normal',
+  })),
+  Participant: jest.fn().mockImplementation((id: string, name: string) => ({
+    id,
+    name,
+    hand: { piles: [], placements: [] },
+  })),
+}));
 
 // Mock Ink components
 jest.mock('ink', () => ({
   Box: ({ children, ...props }: any) => ({ type: 'Box', props: { ...props, children } }),
   Text: ({ children, ...props }: any) => ({ type: 'Text', props: { ...props, children } }),
 }));
+
+import { DefaultUIAdapter } from '../../src/components/UIAdapter';
+import { ActionDefinition } from '../../src/types/actions';
+
+// Define types for the mocked classes
+interface Card {
+  id: string;
+  properties: Record<string, any>;
+  faceUp: boolean;
+  orientation: string;
+  faceImageUrl?: string;
+  backImageUrl?: string;
+}
+
+interface Participant {
+  id: string;
+  name: string;
+  hand: {
+    piles: any[];
+    placements: any[];
+  };
+}
 
 describe('DefaultUIAdapter', () => {
   let adapter: DefaultUIAdapter;

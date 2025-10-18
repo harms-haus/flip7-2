@@ -14,7 +14,7 @@ module.exports = {
       tsconfig: {
         module: 'esnext',
         target: 'es2020',
-        moduleResolution: 'node',
+        moduleResolution: 'bundler',
         lib: ['es2020', 'dom']
       }
     }]

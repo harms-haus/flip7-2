@@ -1,19 +1,19 @@
 import { promises as fs } from 'fs';
-import { join, resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join, resolve } from 'path';
 import { GameConfiguration } from '../types';
+import { getCurrentDirname } from './path-resolver';
 
-// Get __dirname equivalent for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const currentDir = getCurrentDirname();
 
 /**
  * Discover available game configurations.
  * Looks for GameConfiguration classes in the games directory.
  */
-export async function discoverGames(): Promise<GameConfiguration[]> {
+export async function discoverGames(gamesPath?: string): Promise<GameConfiguration[]> {
   const games: GameConfiguration[] = [];
-  const gamesDir = resolve(__dirname, 'games');
+  
+  // Allow custom games path for testing, otherwise use default
+  const gamesDir = gamesPath || resolve(currentDir, '../../games');
   
   try {
     // Check if games directory exists
