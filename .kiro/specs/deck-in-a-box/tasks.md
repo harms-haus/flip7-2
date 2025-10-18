@@ -1,243 +1,180 @@
 # Implementation Plan
 
-- [x] 1. Set up project structure and core interfaces
+- [ ] 1. Set up project structure and core interfaces
   - Create TypeScript project with proper build configuration for CLI application
   - Set up package.json with bin field for global CLI installation
   - Configure TypeScript, ESLint, and Jest for development workflow
-  - Define core interfaces for GameConfiguration, UIAdapter, and ApplicationState
-  - _Requirements: 1.1, 6.1_
+  - Define core interfaces for GameConfiguration, StateRenderer, and ApplicationState
+  - _Requirements: 1.1_
 
-- [x] 2. Implement terminal capability detection and responsive layout system
-  - [x] 2.1 Create terminal capability detection utilities
-    - Write functions to detect terminal size, color support, Unicode support, and interactive mode
-    - Implement terminal resize event handling with React hooks
-    - Create TerminalCapabilities interface and detection logic
-    - _Requirements: 3.5, 7.5_
-
-  - [x] 2.2 Build responsive layout system
-    - Implement ResponsiveAreaDefinition and LayoutConfiguration interfaces
-    - Create layout calculation functions that adapt to different terminal sizes
-    - Build responsive Box components that change layout based on terminal width
-    - _Requirements: 3.1, 3.2_
-
-  - [x] 2.3 Write unit tests for layout system
-    - Test terminal capability detection with mock terminal environments
-    - Test responsive layout calculations for different screen sizes
-    - Test graceful degradation scenarios
-    - _Requirements: 3.5_
-
-- [x] 3. Create CLI application shell and command-line interface
-  - [x] 3.1 Implement main CLI entry point with Commander.js
-    - Set up command-line argument parsing for game selection and options
+- [ ] 2. Create CLI application shell and command-line interface
+  - [ ] 2.1 Implement main CLI entry point with Commander.js
+    - Set up command-line argument parsing for basic options
     - Create help text and version information display
-    - Handle non-interactive mode detection and appropriate fallbacks
+    - Handle basic error scenarios and exit codes
     - _Requirements: 1.1, 1.4_
 
-  - [x] 3.2 Build application shell with Ink framework
-    - Create main App component with screen routing (menu/game/loading/error)
-    - Implement global error boundary for graceful error handling
-    - Set up application state management with React hooks
-    - _Requirements: 1.1, 1.3_
+  - [ ] 2.2 Build simple application shell
+    - Create main application class with screen routing (menu/validation/error)
+    - Implement basic error handling for graceful error display
+    - Set up simple application state management
+    - _Requirements: 1.1_
 
-  - [x] 3.3 Add CLI integration tests
+  - [ ] 2.3 Add CLI integration tests
     - Test command-line argument parsing and validation
-    - Test application startup in different terminal environments
+    - Test application startup scenarios
     - Test error handling for invalid arguments
-    - _Requirements: 1.3_
+    - _Requirements: 1.1_
 
-- [x] 4. Implement game discovery and configuration system
-  - [x] 4.1 Create GameConfiguration abstract class
-    - Define abstract methods for game setup, rendering, and input handling
-    - Implement base functionality for common game operations
+- [ ] 3. Implement game discovery and configuration system
+  - [ ] 3.1 Create GameConfiguration abstract class
+    - Define abstract methods for game setup and action handling
+    - Implement base functionality for common validation operations
     - Create type definitions for game setup results and action definitions
-    - _Requirements: 6.1, 6.2_
+    - _Requirements: 2.1, 2.4_
 
-  - [x] 4.2 Build game discovery system
+  - [ ] 3.2 Build game discovery system
     - Implement automatic detection of GameConfiguration classes in games directory
-    - Create plugin loading mechanism with error handling for invalid configurations
+    - Create simple loading mechanism with error handling for invalid configurations
     - Build game registry that maintains list of available games
-    - _Requirements: 1.2, 6.5_
+    - _Requirements: 1.2_
 
-  - [x] 4.3 Create UIAdapter implementation
-    - Implement utility methods for creating consistent UI elements (boxes, lists, tables)
-    - Build card rendering functions with different styles and orientations
-    - Create interactive element builders (action menus, player selectors)
-    - _Requirements: 3.3, 3.4_
+  - [ ] 3.3 Create StateRenderer implementation
+    - Implement utility methods for formatting game state as text
+    - Build simple text formatting functions for piles, hands, and actions
+    - Create consistent text output patterns
+    - _Requirements: 3.2, 3.3, 3.4, 3.5_
 
-  - [x] 4.4 Write tests for game discovery system
+  - [ ] 3.4 Write tests for game discovery system
     - Test plugin loading with valid and invalid game configurations
     - Test game registry functionality and error handling
-    - Test UIAdapter utility methods
-    - _Requirements: 6.5_
+    - Test StateRenderer utility methods
+    - _Requirements: 1.2_
 
-- [x] 5. Build main menu interface and game selection
-  - [x] 5.1 Create main menu component
-    - Build game selection list with keyboard navigation
-    - Implement game description display and filtering options
-    - Add save/load game options and recent games list
-    - _Requirements: 1.1, 1.2, 5.1_
+- [ ] 4. Build main menu interface and game selection
+  - [ ] 4.1 Create main menu component
+    - Build simple game selection list with numbered options
+    - Implement basic game description display
+    - Add simple navigation and selection handling
+    - _Requirements: 1.1, 1.2_
 
-  - [x] 5.2 Implement game setup flow
-    - Create player configuration interface using GameConfiguration.setupGame()
-    - Build player name input and count validation
-    - Implement game options configuration with validation
-    - _Requirements: 2.2, 2.3, 2.4_
+  - [ ] 4.2 Implement game setup flow
+    - Create simple game initialization using GameConfiguration.setupValidationGame()
+    - Build automatic participant setup based on configuration
+    - Initialize BigDeckEnergy game instance with proper deck and ruleset
+    - _Requirements: 2.2, 2.3, 2.4, 2.5_
 
-  - [x] 5.3 Add menu navigation tests
-    - Test keyboard navigation and game selection
-    - Test player setup flow with various configurations
-    - Test input validation and error handling
-    - _Requirements: 2.3, 2.4_
+  - [ ] 4.3 Add menu navigation tests
+    - Test game selection and initialization
+    - Test game setup flow with various configurations
+    - Test error handling during setup
+    - _Requirements: 2.2, 2.3_
 
-- [x] 6. Implement event-driven game loop and state management
-  - [x] 6.1 Create GameLoop class with EventEmitter
-    - Implement event-driven architecture for turn-based gameplay
-    - Build action processing with atomic state updates
-    - Add turn timer functionality for optional time limits
-    - _Requirements: 4.2, 4.3_
+- [ ] 5. Implement simple validation loop and state management
+  - [ ] 5.1 Create ValidationLoop class
+    - Implement simple synchronous loop for turn-based validation
+    - Build action processing with basic state updates
+    - Add game completion detection and handling
+    - _Requirements: 4.2, 4.3, 5.1, 5.2_
 
-  - [x] 6.2 Build game state synchronization
-    - Implement state update broadcasting to UI components
-    - Create game state validation and consistency checks
-    - Add game phase tracking and transition logic
-    - _Requirements: 3.1, 4.1_
+  - [ ] 5.2 Build game state display
+    - Implement simple text-based state rendering using StateRenderer
+    - Create participant hand display with pile counts
+    - Display gameboard state with pile and placement information
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [x] 6.3 Integrate with BigDeckEnergy library
+  - [ ] 5.3 Integrate with BigDeckEnergy library
     - Create wrapper functions for BigDeckEnergy game instances
-    - Implement game state serialization and deserialization
-    - Build compatibility validation between deck types and rulesets
-    - _Requirements: 2.5, 4.4_
+    - Implement basic game state access and manipulation
+    - Build simple compatibility validation between deck types and rulesets
+    - _Requirements: 2.4, 2.5_
 
-  - [x] 6.4 Write game loop tests
-    - Test event-driven action processing and state updates
-    - Test turn management and game phase transitions
-    - Test BigDeckEnergy integration and compatibility validation
-    - _Requirements: 4.3, 4.4_
+  - [ ] 5.4 Write validation loop tests
+    - Test validation session flow and state updates
+    - Test game completion detection and handling
+    - Test BigDeckEnergy integration and basic functionality
+    - _Requirements: 4.3, 5.1, 5.2_
 
-- [x] 7. Create game rendering and display system
-  - [x] 7.1 Implement game state renderer
-    - Build main game display component that uses GameConfiguration.renderGameState()
-    - Create player hand display with card selection highlighting
-    - Implement game board renderer with proper card positioning
-    - _Requirements: 3.1, 3.2, 3.3_
-
-  - [x] 7.2 Build card rendering system
-    - Create card display components with face-up/face-down states
-    - Implement different card sizes and orientations for various contexts
-    - Add card highlighting and selection indicators
-    - _Requirements: 3.4, 4.1_
-
-  - [x] 7.3 Create status and information displays
-    - Build player information panels showing scores and status
-    - Implement game phase indicator and turn information
-    - Add message display system for game events and feedback
-    - _Requirements: 3.1, 7.1_
-
-  - [x] 7.4 Add rendering tests
-    - Test game state rendering with various game states
-    - Test card display in different orientations and states
-    - Test responsive layout behavior at different terminal sizes
-    - _Requirements: 3.5_
-
-- [x] 8. Implement input handling and player interaction
-  - [x] 8.1 Create input handler system
-    - Build keyboard input processing using Ink's useInput hook
-    - Implement action mapping from key presses to game actions
-    - Add input validation and error feedback for invalid actions
+- [ ] 6. Implement input handling and action execution
+  - [ ] 6.1 Create action handler system
+    - Build simple input processing using Node.js readline
+    - Implement action selection from numbered lists
+    - Add input validation and error feedback for invalid selections
     - _Requirements: 4.1, 4.2, 4.4_
 
-  - [x] 8.2 Build action menu and selection interfaces
-    - Create dynamic action menus based on available game actions
-    - Implement card selection interface with keyboard navigation
-    - Add confirmation dialogs for important actions
-    - _Requirements: 4.1, 4.2_
+  - [ ] 6.2 Build action execution system
+    - Create action execution through GameConfiguration.executeAction()
+    - Implement action validation and error handling
+    - Add simple feedback for successful and failed actions
+    - _Requirements: 4.2, 4.3, 4.4_
 
-  - [x] 8.3 Integrate input with game loop
-    - Connect input handlers to GameLoop action processing
-    - Implement input queuing for rapid key presses
-    - Add input debouncing to prevent accidental double actions
+  - [ ] 6.3 Integrate input with validation loop
+    - Connect input handlers to ValidationLoop action processing
+    - Implement simple action queuing and processing
+    - Add basic error recovery for failed actions
     - _Requirements: 4.2, 4.3_
 
-  - [x] 8.4 Write input handling tests
-    - Test keyboard input processing and action mapping
-    - Test input validation and error handling
-    - Test integration between input system and game loop
+  - [ ] 6.4 Write input handling tests
+    - Test input processing and action selection
+    - Test action execution and error handling
+    - Test integration between input system and validation loop
     - _Requirements: 4.4_
 
-- [ ] 9. Build save/load system for game persistence
-  - [ ] 9.1 Implement game state serialization
-    - Create JSON serialization for complete game state including BigDeckEnergy data
-    - Build save file management with metadata (timestamp, game type, players)
-    - Implement save file validation and version compatibility checking
-    - _Requirements: 5.1, 5.2, 5.4_
-
-  - [ ] 9.2 Create save/load interface
-    - Build save game dialog with file naming and location selection
-    - Implement load game interface with save file browsing and preview
-    - Add save file management (delete, rename, backup)
-    - _Requirements: 5.3, 5.5_
-
-  - [ ] 9.3 Add persistence tests
-    - Test game state serialization and deserialization
-    - Test save file validation and error handling
-    - Test save/load interface functionality
-    - _Requirements: 5.4, 5.5_
-
-- [ ] 10. Create sample game configurations
-  - [x] 10.1 Implement War game configuration
+- [ ] 7. Create sample game configurations
+  - [ ] 7.1 Implement War game configuration
     - Create WarGameConfiguration class extending GameConfiguration
-    - Implement War-specific UI rendering for game state and player hands
-    - Build War-specific input handling and action definitions
-    - Add War game win screen with statistics display
-    - _Requirements: 6.3, 6.4, 7.2, 7.4_
+    - Implement War-specific game setup and participant configuration
+    - Build War-specific action definitions and execution logic
+    - Add War game state formatting for validation display
+    - _Requirements: 2.1, 2.4, 3.1, 3.2, 3.3_
 
-  - [x] 10.2 Implement Go Fish game configuration
-    - Create GoFishGameConfiguration class with Go Fish-specific UI
-    - Build Go Fish card selection and asking interface
-    - Implement Go Fish-specific game state display and player information
-    - Add Go Fish win screen and scoring display
-    - _Requirements: 6.3, 6.4, 7.2, 7.4_
+  - [ ] 7.2 Implement Go Fish game configuration
+    - Create GoFishGameConfiguration class with Go Fish-specific setup
+    - Build Go Fish action definitions and card selection logic
+    - Implement Go Fish-specific game state display and participant information
+    - Add Go Fish action execution and validation logic
+    - _Requirements: 2.1, 2.4, 3.1, 3.2, 3.3_
 
-  - [ ] 10.3 Write game configuration tests
+  - [ ] 7.3 Write game configuration tests
     - Test War and Go Fish game configurations with various game states
-    - Test game-specific UI rendering and input handling
-    - Test win condition detection and win screen display
-    - _Requirements: 7.2, 7.4_
+    - Test game-specific action handling and state formatting
+    - Test game completion detection and final state display
+    - _Requirements: 2.4, 3.1_
 
-- [ ] 11. Add error handling and user feedback systems
-  - [ ] 11.1 Implement comprehensive error handling
-    - Create error categories and user-friendly error messages
-    - Build error recovery mechanisms and fallback behaviors
-    - Implement error logging for debugging while hiding technical details from users
-    - _Requirements: 1.3, 4.4, 7.5_
+- [ ] 8. Add error handling and user feedback systems
+  - [ ] 8.1 Implement basic error handling
+    - Create simple error categories and clear error messages
+    - Build basic error recovery mechanisms
+    - Implement simple error logging for debugging
+    - _Requirements: 1.3, 4.4, 5.4, 5.5_
 
-  - [ ] 11.2 Create user feedback and help system
-    - Build context-sensitive help displays and keyboard shortcut information
-    - Implement progress indicators for loading operations
-    - Add confirmation dialogs and user guidance messages
-    - _Requirements: 1.4, 7.5_
+  - [ ] 8.2 Create user feedback system
+    - Build simple status messages and game progress indicators
+    - Implement basic help and instruction display
+    - Add simple confirmation and guidance messages
+    - _Requirements: 1.4, 5.5_
 
-  - [ ] 11.3 Add error handling tests
+  - [ ] 8.3 Add error handling tests
     - Test error handling and recovery in various failure scenarios
     - Test user feedback systems and help displays
-    - Test graceful degradation in limited terminal environments
-    - _Requirements: 1.3, 7.5_
+    - Test graceful error handling with invalid game states
+    - _Requirements: 1.3, 5.4, 5.5_
 
-- [ ] 12. Final integration and polish
-  - [ ] 12.1 Integrate all components and test complete workflows
-    - Connect all systems together and test end-to-end game sessions
+- [ ] 9. Final integration and polish
+  - [ ] 9.1 Integrate all components and test complete workflows
+    - Connect all systems together and test end-to-end validation sessions
     - Verify proper cleanup and resource management
-    - Test application performance with complex game states
+    - Test application performance with basic game scenarios
     - _Requirements: All requirements_
 
-  - [ ] 12.2 Add CLI packaging and distribution setup
+  - [ ] 9.2 Add CLI packaging and distribution setup
     - Configure package.json for npm publishing with proper bin configuration
-    - Create installation and usage documentation
+    - Create basic installation and usage documentation
     - Set up build scripts for distribution packaging
     - _Requirements: 1.1_
 
-  - [ ] 12.3 Comprehensive integration testing
+  - [ ] 9.3 Comprehensive integration testing
     - Test complete user workflows from startup to game completion
-    - Test save/load functionality with real game sessions
+    - Test validation functionality with real BigDeckEnergy games
     - Test error scenarios and recovery paths
     - _Requirements: All requirements_
