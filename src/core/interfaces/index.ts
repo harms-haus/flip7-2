@@ -8,3 +8,4 @@ export * from './gameboard';
 export * from './hand';
 export * from './events';
 export * from './api';
+export * from './history';

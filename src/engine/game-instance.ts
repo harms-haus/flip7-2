@@ -9,6 +9,8 @@ import { Participant } from '../models/participant';
 import { Hand } from '../models/hand';
 import { CompatibilityValidator, CompatibilityResult } from './compatibility';
 import { CompatibilityError, DeckMixingError, InvalidActionError } from '../core/errors';
+import { HistoryManager } from './history-manager';
+import { GameHistory, GameStateSnapshot, ActionDescriptor } from '../core/interfaces/history';
 
 /**
  * Configuration for creating a new game instance
@@ -52,6 +54,7 @@ export class GameInstance {
   private readonly ruleset: Ruleset;
   private readonly deckType: DeckType;
   private readonly gameStateAPI: GameStateAPIImpl;
+  private readonly historyManager: HistoryManager;
   private isInitialized: boolean = false;
 
   /**
@@ -65,7 +68,9 @@ export class GameInstance {
     this.gameState = gameState;
     this.ruleset = ruleset;
     this.deckType = deckType;
-    this.gameStateAPI = new GameStateAPIImpl(gameState);
+    this.historyManager = new HistoryManager(gameState.gameId, gameState);
+    this.gameStateAPI = new GameStateAPIImpl(gameState, this.historyManager);
+    this.gameStateAPI.setAutoCreateSnapshots(false); // GameInstance manages snapshots
   }
 
   /**
@@ -161,6 +166,51 @@ export class GameInstance {
   }
 
   /**
+   * Get the history manager for this game
+   */
+  public getHistoryManager(): HistoryManager {
+    return this.historyManager;
+  }
+
+  /**
+   * Get the complete game history
+   */
+  public getGameHistory(): GameHistory {
+    return this.historyManager.getGameHistory();
+  }
+
+  /**
+   * Get the current state snapshot
+   */
+  public getCurrentSnapshot(): GameStateSnapshot {
+    return this.historyManager.getCurrentSnapshot();
+  }
+
+  /**
+   * Get a specific snapshot by ID
+   */
+  public getSnapshotById(snapshotId: string): GameStateSnapshot | null {
+    return this.historyManager.getSnapshotById(snapshotId);
+  }
+
+  /**
+   * Replay the game to a specific snapshot
+   */
+  public replayToSnapshot(snapshotId: string): GameState {
+    const replayedState = this.historyManager.replayToSnapshot(snapshotId);
+    this.gameState = replayedState;
+    this.gameStateAPI.updateGameState(replayedState);
+    return replayedState;
+  }
+
+  /**
+   * Export complete game history
+   */
+  public exportHistory(format: 'full' | 'compressed' = 'full'): string {
+    return this.historyManager.exportHistory(format);
+  }
+
+  /**
    * Get the current game phase
    */
   public getCurrentPhase(): GamePhase {
@@ -194,9 +244,21 @@ export class GameInstance {
       // Run ruleset setup
       const setupGameState = this.ruleset.setup(this.gameState, this.deckType);
       
-      // Update internal state
-      this.gameState = setupGameState;
-      this.gameStateAPI.updateGameState(setupGameState);
+      // Create action descriptor for initialization
+      const initAction: ActionDescriptor = {
+        type: 'game_setup',
+        description: `Game initialized with ruleset '${this.ruleset.name}' and deck type '${this.deckType.name}'`,
+        details: {
+          rulesetName: this.ruleset.name,
+          deckTypeName: this.deckType.name,
+          participantCount: setupGameState.participants.size,
+          handCount: setupGameState.hands.size
+        },
+        timestamp: Date.now()
+      };
+
+      // Update internal state and create snapshot
+      this.updateGameStateWithSnapshot(setupGameState, initAction);
       this.isInitialized = true;
 
       // Transition to dealing phase if still in setup
@@ -220,15 +282,18 @@ export class GameInstance {
       return; // Already in the target phase
     }
 
+    const fromPhase = this.gameState.phase;
+
     // Validate phase transition
-    this.validatePhaseTransition(this.gameState.phase, newPhase);
+    this.validatePhaseTransition(fromPhase, newPhase);
 
     // Update game state with new phase
+    let updatedGameState: GameState;
     if ('withPhase' in this.gameState && typeof this.gameState.withPhase === 'function') {
-      this.gameState = this.gameState.withPhase(newPhase);
+      updatedGameState = this.gameState.withPhase(newPhase);
     } else {
       // Fallback: create new GameState with updated phase
-      this.gameState = new GameStateModel(
+      updatedGameState = new GameStateModel(
         this.gameState.gameId,
         newPhase,
         this.gameState.gameboard as Gameboard,
@@ -238,7 +303,21 @@ export class GameInstance {
         this.gameState.metadata
       );
     }
-    this.gameStateAPI.updateGameState(this.gameState);
+
+    // Create action descriptor for phase transition
+    const phaseAction: ActionDescriptor = {
+      type: 'phase_transition',
+      description: `Game phase changed from ${fromPhase} to ${newPhase}`,
+      details: {
+        fromPhase,
+        toPhase: newPhase,
+        transitionTime: Date.now()
+      },
+      timestamp: Date.now()
+    };
+
+    // Update state with snapshot
+    this.updateGameStateWithSnapshot(updatedGameState, phaseAction);
 
     // Add event for phase transition
     this.gameStateAPI.addEvent({
@@ -246,7 +325,7 @@ export class GameInstance {
       type: 'phase_transition',
       timestamp: Date.now(),
       data: {
-        fromPhase: this.gameState.phase,
+        fromPhase,
         toPhase: newPhase
       }
     });
@@ -265,9 +344,21 @@ export class GameInstance {
       // Execute ruleset game loop
       const result = this.ruleset.gameloop(this.gameState);
       
-      // Update internal state with the result
-      this.gameState = result.updatedGameState;
-      this.gameStateAPI.updateGameState(result.updatedGameState);
+      // Create action descriptor for game loop execution
+      const gameLoopAction: ActionDescriptor = {
+        type: 'game_loop_execution',
+        description: `Game loop executed - can continue: ${result.canContinue}, requires interaction: ${result.requiresParticipantInteraction}`,
+        details: {
+          canContinue: result.canContinue,
+          requiresParticipantInteraction: result.requiresParticipantInteraction,
+          currentPhase: result.updatedGameState.phase,
+          participantCount: result.updatedGameState.participants.size
+        },
+        timestamp: Date.now()
+      };
+
+      // Update internal state with the result and create snapshot
+      this.updateGameStateWithSnapshot(result.updatedGameState, gameLoopAction);
 
       return result;
 
@@ -351,8 +442,25 @@ export class GameInstance {
         stateChanges: this.getStateChangesSinceLastEvent()
       });
 
-      // Update internal game state
-      this.gameState = this.gameStateAPI.getGameState();
+      // Get updated game state
+      const updatedGameState = this.gameStateAPI.getGameState();
+
+      // Create action descriptor for the processed action
+      const actionDescriptor: ActionDescriptor = {
+        type: 'participant_action',
+        description: `Participant '${action.participantId}' performed action '${action.type}'`,
+        participantId: action.participantId,
+        details: {
+          actionType: action.type,
+          actionData: action.data,
+          executionResult,
+          success: executionResult.success
+        },
+        timestamp: Date.now()
+      };
+
+      // Update internal game state with snapshot
+      this.updateGameStateWithSnapshot(updatedGameState, actionDescriptor);
 
       // Validate state after action execution
       const postActionValidation = this.validateGameState();
@@ -644,7 +752,22 @@ export class GameInstance {
     }
 
     this.gameStateAPI.createParticipant(participantId, name, isNPC);
-    this.gameState = this.gameStateAPI.getGameState();
+    const updatedGameState = this.gameStateAPI.getGameState();
+
+    // Create action descriptor
+    const action: ActionDescriptor = {
+      type: 'participant_created',
+      description: `Created ${isNPC ? 'NPC' : 'player'} participant '${name}' with ID '${participantId}'`,
+      details: {
+        participantId,
+        name,
+        isNPC,
+        totalParticipants: updatedGameState.participants.size
+      },
+      timestamp: Date.now()
+    };
+
+    this.updateGameStateWithSnapshot(updatedGameState, action);
   }
 
   /**
@@ -664,7 +787,22 @@ export class GameInstance {
 
     this.gameStateAPI.createHand(handId, name, participantId);
     this.gameStateAPI.addHandToParticipant(participantId, handId);
-    this.gameState = this.gameStateAPI.getGameState();
+    const updatedGameState = this.gameStateAPI.getGameState();
+
+    // Create action descriptor
+    const action: ActionDescriptor = {
+      type: 'hand_created',
+      description: `Created hand '${name}' with ID '${handId}' for participant '${participantId}'`,
+      details: {
+        handId,
+        handName: name,
+        participantId,
+        totalHands: updatedGameState.hands.size
+      },
+      timestamp: Date.now()
+    };
+
+    this.updateGameStateWithSnapshot(updatedGameState, action);
   }
 
   /**
@@ -846,7 +984,23 @@ export class GameInstance {
       }
     });
 
-    this.gameState = this.gameStateAPI.getGameState();
+    const updatedGameState = this.gameStateAPI.getGameState();
+
+    // Create action descriptor for game completion
+    const action: ActionDescriptor = {
+      type: 'game_completed',
+      description: `Game completed: ${reason}${winners.length > 0 ? ` - Winners: ${winners.join(', ')}` : ''}`,
+      details: {
+        reason,
+        winners,
+        finalPhase: GamePhase.FINISHED,
+        completionTime: Date.now(),
+        totalSnapshots: this.historyManager.getGameHistory().snapshots.size
+      },
+      timestamp: Date.now()
+    };
+
+    this.updateGameStateWithSnapshot(updatedGameState, action);
   }
 
   /**
@@ -864,8 +1018,6 @@ export class GameInstance {
       this.gameState.metadata // Keep metadata
     );
 
-    this.gameState = resetGameState;
-    this.gameStateAPI.updateGameState(resetGameState);
     this.isInitialized = false;
 
     // Add reset event
@@ -878,7 +1030,22 @@ export class GameInstance {
       }
     });
 
-    this.gameState = this.gameStateAPI.getGameState();
+    const updatedGameState = this.gameStateAPI.getGameState();
+
+    // Create action descriptor for game reset
+    const action: ActionDescriptor = {
+      type: 'game_reset',
+      description: 'Game was reset to initial state',
+      details: {
+        resetTimestamp: Date.now(),
+        participantsKept: resetGameState.participants.size,
+        handsCleared: this.gameState.hands.size,
+        eventsCleared: this.gameState.events.length
+      },
+      timestamp: Date.now()
+    };
+
+    this.updateGameStateWithSnapshot(updatedGameState, action);
   }
 
   /**
@@ -915,6 +1082,20 @@ export class GameInstance {
     return participant.handIds
       .map(handId => this.gameState.hands.get(handId))
       .filter((hand): hand is import('../core/interfaces').Hand => hand !== undefined);
+  }
+
+  /**
+   * Update game state and create a snapshot in history
+   * @param newGameState The new game state
+   * @param action The action that caused this state change
+   */
+  private updateGameStateWithSnapshot(newGameState: GameState, action: ActionDescriptor): void {
+    // Update internal state
+    this.gameState = newGameState;
+    this.gameStateAPI.updateGameState(newGameState);
+    
+    // Create snapshot in history
+    this.historyManager.createSnapshot(newGameState, action);
   }
 
   /**

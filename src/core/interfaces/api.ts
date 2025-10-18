@@ -2,6 +2,8 @@ import { Card } from './card';
 import { CardInPile, CardInPlacement } from './gameboard';
 import { Participant } from './participant';
 import { GameEvent, EventFilter } from './events';
+import { GameStateSnapshot, ActionDescriptor, GameHistory } from './history';
+import { GameState } from './game-state';
 import { CardOrientation } from '../types';
 
 /**
@@ -50,4 +52,13 @@ export interface GameStateAPI {
   // Event Management
   addEvent(event: GameEvent): void;
   getEvents(filter?: EventFilter): GameEvent[];
+  
+  // History Management
+  createSnapshot(action: ActionDescriptor): GameStateSnapshot;
+  getCurrentSnapshot(): GameStateSnapshot;
+  getSnapshotById(snapshotId: string): GameStateSnapshot | null;
+  getGameHistory(): GameHistory;
+  replayToSnapshot(snapshotId: string): GameState;
+  exportHistory(format?: 'full' | 'compressed'): string;
+  importHistory(serializedHistory: string): GameHistory;
 }

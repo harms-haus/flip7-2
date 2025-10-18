@@ -1,6 +1,7 @@
 import { GameStateAPI } from '../core/interfaces/api';
 import { GameState } from '../core/interfaces/game-state';
 import { GameEvent, EventFilter } from '../core/interfaces/events';
+import { GameStateSnapshot, ActionDescriptor, GameHistory } from '../core/interfaces/history';
 import { Participant } from '../core/interfaces/participant';
 import { Card } from '../core/interfaces/card';
 import { CardInPile, CardInPlacement } from '../core/interfaces/gameboard';
@@ -22,6 +23,7 @@ import {
 import { Participant as ParticipantModel } from '../models/participant';
 import { Hand } from '../models/hand';
 import { Gameboard, CardPile, CardPlacement } from '../models/gameboard';
+import { HistoryManager } from '../engine/history-manager';
 
 /**
  * Comprehensive Game State API implementation with access control and event tracking
@@ -29,9 +31,20 @@ import { Gameboard, CardPile, CardPlacement } from '../models/gameboard';
 export class GameStateAPIImpl implements GameStateAPI {
   private gameState: GameState;
   private eventIdCounter: number = 0;
+  private historyManager: HistoryManager;
 
-  constructor(gameState: GameState) {
+  private autoCreateSnapshots: boolean = true;
+
+  constructor(gameState: GameState, historyManager?: HistoryManager) {
     this.gameState = gameState;
+    this.historyManager = historyManager || new HistoryManager(gameState.gameId, gameState);
+  }
+
+  /**
+   * Enable or disable automatic snapshot creation
+   */
+  public setAutoCreateSnapshots(enabled: boolean): void {
+    this.autoCreateSnapshots = enabled;
   }
 
   /**
@@ -71,6 +84,13 @@ export class GameStateAPIImpl implements GameStateAPI {
       participantId: id,
       data: { name, isNPC }
     });
+
+    this.createSnapshotForAction(
+      'participant_created',
+      `Created participant '${name}' (${isNPC ? 'NPC' : 'Human'})`,
+      id,
+      { name, isNPC }
+    );
   }
 
   public updateParticipantStatus(participantId: string, key: string, value: any): void {
@@ -97,6 +117,13 @@ export class GameStateAPIImpl implements GameStateAPI {
       participantId,
       data: { key, value }
     });
+
+    this.createSnapshotForAction(
+      'participant_status_updated',
+      `Updated participant '${participantId}' status: ${key} = ${value}`,
+      participantId,
+      { key, value }
+    );
   }
 
   public addHandToParticipant(participantId: string, handId: string): void {
@@ -190,6 +217,13 @@ export class GameStateAPIImpl implements GameStateAPI {
       participantId,
       data: { handId, name }
     });
+
+    this.createSnapshotForAction(
+      'hand_created',
+      `Created hand '${name}' for participant '${participantId}'`,
+      participantId,
+      { handId, name }
+    );
   }
 
   public createHandPile(handId: string, pileName: string, isOrdered: boolean, orientation?: CardOrientation): void {
@@ -279,6 +313,14 @@ export class GameStateAPIImpl implements GameStateAPI {
       participantId: hand.participantId,
       data: { handId, pileName, cardId: card.id, faceUp, owner: cardInPile.owner }
     });
+
+    // Create snapshot for this action
+    this.createSnapshotForAction(
+      'card_added_to_hand_pile',
+      `Added card ${card.id} to hand pile ${pileName}`,
+      hand.participantId,
+      { handId, pileName, cardId: card.id, faceUp, owner: cardInPile.owner }
+    );
   }
 
   public removeCardFromHandPile(handId: string, pileName: string, index?: number): CardInPile | null {
@@ -832,6 +874,21 @@ export class GameStateAPIImpl implements GameStateAPI {
         toPile
       }
     });
+
+    // Create snapshot for this action
+    this.createSnapshotForAction(
+      'card_moved',
+      `Moved card ${removedCard.card.id} from ${fromLocation}:${fromPile} to ${toLocation}:${toPile}`,
+      undefined,
+      {
+        cardId: removedCard.card.id,
+        fromLocation,
+        fromPile,
+        fromIndex,
+        toLocation,
+        toPile
+      }
+    );
   }
 
   // ===== VISIBILITY AND ACCESS CONTROL =====
@@ -888,10 +945,74 @@ export class GameStateAPIImpl implements GameStateAPI {
     return events;
   }
 
+  // ===== HISTORY MANAGEMENT =====
+
+  public createSnapshot(action: ActionDescriptor): GameStateSnapshot {
+    const snapshot = this.historyManager.createSnapshot(this.gameState, action);
+    return snapshot;
+  }
+
+  public getCurrentSnapshot(): GameStateSnapshot {
+    return this.historyManager.getCurrentSnapshot();
+  }
+
+  public getSnapshotById(snapshotId: string): GameStateSnapshot | null {
+    return this.historyManager.getSnapshotById(snapshotId);
+  }
+
+  public getGameHistory(): GameHistory {
+    return this.historyManager.getGameHistory();
+  }
+
+  public replayToSnapshot(snapshotId: string): GameState {
+    const replayedState = this.historyManager.replayToSnapshot(snapshotId);
+    this.gameState = replayedState;
+    return replayedState;
+  }
+
+  public exportHistory(format: 'full' | 'compressed' = 'full'): string {
+    return this.historyManager.exportHistory(format);
+  }
+
+  public importHistory(serializedHistory: string): GameHistory {
+    const importedHistoryManager = HistoryManager.importHistory(serializedHistory);
+    this.historyManager = importedHistoryManager;
+    
+    // Update current game state to match the imported history
+    const currentSnapshot = this.historyManager.getCurrentSnapshot();
+    this.gameState = currentSnapshot.gameState;
+    
+    return this.historyManager.getGameHistory();
+  }
+
   // ===== PRIVATE HELPER METHODS =====
 
   private generateEventId(): string {
     return `event_${this.gameState.gameId}_${++this.eventIdCounter}_${Date.now()}`;
+  }
+
+  /**
+   * Create a snapshot after a state change with automatic action descriptor generation
+   */
+  private createSnapshotForAction(
+    actionType: string,
+    description: string,
+    participantId?: string,
+    details: Record<string, any> = {}
+  ): void {
+    if (!this.autoCreateSnapshots) {
+      return; // Skip snapshot creation when disabled
+    }
+
+    const action: ActionDescriptor = {
+      type: actionType,
+      description,
+      participantId,
+      details,
+      timestamp: Date.now()
+    };
+
+    this.historyManager.createSnapshot(this.gameState, action);
   }
 
   private getPileFromLocation(location: 'gameboard' | string, pileName: string): CardPile | null {

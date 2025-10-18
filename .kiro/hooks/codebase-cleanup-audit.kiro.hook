@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Codebase Cleanup Audit",
+  "description": "Monitors the entire codebase for inconsistencies, unnecessary wrappers, superfluous functionality, excessive documentation, and dead code. Triggers comprehensive cleanup analysis when files are modified.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      "src/**/*.ts",
+      "tests/**/*.ts",
+      "*.ts",
+      "*.js",
+      "*.json",
+      "*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the entire codebase for the following issues and provide specific recommendations with file locations:\n\n1. **Code Inconsistencies**: Look for inconsistent naming conventions, coding patterns, import styles, and architectural approaches across files\n2. **Unnecessary Wrappers**: Identify wrapper functions, classes, or abstractions that add no value and could be simplified or removed\n3. **Superfluous Functionality**: Find unused exports, overly complex implementations that could be simplified, and features that duplicate existing functionality\n4. **Excessive Documentation**: Locate over-documented code where comments are redundant or explain obvious functionality\n5. **Dead Code**: Detect unused imports, unreferenced functions/classes, commented-out code blocks, and orphaned files\n\nFor each issue found, provide:\n- Exact file path and line numbers\n- Description of the problem\n- Specific recommendation for cleanup\n- Impact assessment (low/medium/high priority)\n\nFocus on maintaining the library's core architecture while eliminating bloat and improving maintainability."
+  }
+}
