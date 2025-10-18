@@ -1,0 +1,1 @@
+export { WarGameConfiguration } from './war-config';

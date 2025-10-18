@@ -184,7 +184,7 @@
     - _Requirements: 5.4, 5.5_
 
 - [ ] 10. Create sample game configurations
-  - [ ] 10.1 Implement War game configuration
+  - [x] 10.1 Implement War game configuration
     - Create WarGameConfiguration class extending GameConfiguration
     - Implement War-specific UI rendering for game state and player hands
     - Build War-specific input handling and action definitions
