@@ -28,6 +28,9 @@ export interface EventFilter {
   /** Filter by participant ID */
   participantId?: string;
   
+  /** Filter by party ID */
+  partyId?: string;
+  
   /** Filter events since this timestamp */
   since?: number;
 }

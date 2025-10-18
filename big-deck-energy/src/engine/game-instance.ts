@@ -6,6 +6,7 @@ import { GameStateAPIImpl } from '../api/game-state-api';
 import { GameState as GameStateModel } from '../models/game-state';
 import { Gameboard } from '../models/gameboard';
 import { Participant } from '../models/participant';
+import { Party } from '../models/party';
 import { Hand } from '../models/hand';
 import { CompatibilityValidator, CompatibilityResult } from './compatibility';
 import { CompatibilityError, DeckMixingError, InvalidActionError } from '../core/errors';
@@ -105,8 +106,9 @@ export class GameInstance {
         new Gameboard(), // Use default gameboard
         new Map<string, Participant>(), // Use default participants map
         new Map<string, Hand>(), // Use default hands map
-        undefined, // Use default events array
-        config.metadata || {}
+        [], // Use default events array
+        config.metadata || {}, // Use default metadata
+        new Map<string, Party>() // Use default parties map
       );
 
       // Create game instance
@@ -252,7 +254,8 @@ export class GameInstance {
           rulesetName: this.ruleset.name,
           deckTypeName: this.deckType.name,
           participantCount: setupGameState.participants.size,
-          handCount: setupGameState.hands.size
+          handCount: setupGameState.hands.size,
+          partyCount: setupGameState.parties.size
         },
         timestamp: Date.now()
       };
@@ -300,7 +303,8 @@ export class GameInstance {
         this.gameState.participants as Map<string, Participant>,
         this.gameState.hands as Map<string, Hand>,
         this.gameState.events,
-        this.gameState.metadata
+        this.gameState.metadata,
+        this.gameState.parties as Map<string, Party>
       );
     }
 
@@ -352,7 +356,8 @@ export class GameInstance {
           canContinue: result.canContinue,
           requiresParticipantInteraction: result.requiresParticipantInteraction,
           currentPhase: result.updatedGameState.phase,
-          participantCount: result.updatedGameState.participants.size
+          participantCount: result.updatedGameState.participants.size,
+          partyCount: result.updatedGameState.parties.size
         },
         timestamp: Date.now()
       };
@@ -373,7 +378,9 @@ export class GameInstance {
    */
   public validateGameState(): ValidationError[] {
     try {
-      return this.ruleset.validate(this.gameState);
+      const rulesetErrors = this.ruleset.validate(this.gameState);
+      const partyErrors = this.validatePartyConsistency();
+      return [...rulesetErrors, ...partyErrors];
     } catch (error) {
       return [{
         code: 'VALIDATION_ERROR',
@@ -381,6 +388,56 @@ export class GameInstance {
         severity: 'error'
       }];
     }
+  }
+
+  /**
+   * Validate party consistency in the game state
+   * @returns Array of party-related validation errors
+   */
+  private validatePartyConsistency(): ValidationError[] {
+    const errors: ValidationError[] = [];
+
+    // Check that all participant party IDs reference existing parties
+    for (const participant of this.gameState.participants.values()) {
+      if (participant.partyId !== null) {
+        const party = this.gameState.parties.get(participant.partyId);
+        if (!party) {
+          errors.push({
+            code: 'PARTY_REFERENCE_ERROR',
+            message: `Participant '${participant.id}' references non-existent party '${participant.partyId}'`,
+            severity: 'error'
+          });
+        } else if (!party.participantIds.includes(participant.id)) {
+          errors.push({
+            code: 'PARTY_MEMBERSHIP_ERROR',
+            message: `Party '${participant.partyId}' does not include participant '${participant.id}'`,
+            severity: 'error'
+          });
+        }
+      }
+    }
+
+    // Check that all party participant IDs reference existing participants
+    for (const party of this.gameState.parties.values()) {
+      for (const participantId of party.participantIds) {
+        const participant = this.gameState.participants.get(participantId);
+        if (!participant) {
+          errors.push({
+            code: 'PARTICIPANT_REFERENCE_ERROR',
+            message: `Party '${party.id}' references non-existent participant '${participantId}'`,
+            severity: 'error'
+          });
+        } else if (participant.partyId !== party.id) {
+          errors.push({
+            code: 'PARTICIPANT_PARTY_MISMATCH',
+            message: `Participant '${participantId}' has mismatched party ID. Expected: '${party.id}', Found: '${participant.partyId}'`,
+            severity: 'error'
+          });
+        }
+      }
+    }
+
+    return errors;
   }
 
   /**
@@ -718,6 +775,7 @@ export class GameInstance {
     deckType: string;
     participantCount: number;
     handCount: number;
+    partyCount: number;
     eventCount: number;
     isInitialized: boolean;
     validationErrors: ValidationError[];
@@ -733,6 +791,7 @@ export class GameInstance {
       deckType: this.deckType.name,
       participantCount: this.gameState.participants.size,
       handCount: this.gameState.hands.size,
+      partyCount: this.gameState.parties.size,
       eventCount: this.gameState.events.length,
       isInitialized: this.isInitialized,
       validationErrors,
@@ -865,6 +924,169 @@ export class GameInstance {
 
     this.gameStateAPI.updateHandStatus(handId, key, value);
     this.gameState = this.gameStateAPI.getGameState();
+  }
+
+  // ===== PARTY MANAGEMENT =====
+
+  /**
+   * Create a party in the game
+   * @param partyId Unique identifier for the party
+   * @param name Display name for the party
+   */
+  public createParty(partyId: string, name: string): void {
+    if (this.gameState.parties.has(partyId)) {
+      throw new Error(`Party '${partyId}' already exists`);
+    }
+
+    this.gameStateAPI.createParty(partyId, name);
+    const updatedGameState = this.gameStateAPI.getGameState();
+
+    // Create action descriptor
+    const action: ActionDescriptor = {
+      type: 'party_created',
+      description: `Created party '${name}' with ID '${partyId}'`,
+      details: {
+        partyId,
+        name,
+        totalParties: updatedGameState.parties.size
+      },
+      timestamp: Date.now()
+    };
+
+    this.updateGameStateWithSnapshot(updatedGameState, action);
+  }
+
+  /**
+   * Add a participant to a party
+   * @param participantId ID of the participant
+   * @param partyId ID of the party
+   */
+  public addParticipantToParty(participantId: string, partyId: string): void {
+    if (!this.gameState.participants.has(participantId)) {
+      throw new Error(`Participant '${participantId}' does not exist`);
+    }
+
+    if (!this.gameState.parties.has(partyId)) {
+      throw new Error(`Party '${partyId}' does not exist`);
+    }
+
+    this.gameStateAPI.addParticipantToParty(participantId, partyId);
+    const updatedGameState = this.gameStateAPI.getGameState();
+
+    // Create action descriptor
+    const action: ActionDescriptor = {
+      type: 'participant_added_to_party',
+      description: `Added participant '${participantId}' to party '${partyId}'`,
+      participantId,
+      details: {
+        participantId,
+        partyId,
+        partyMemberCount: updatedGameState.parties.get(partyId)?.participantIds.length || 0
+      },
+      timestamp: Date.now()
+    };
+
+    this.updateGameStateWithSnapshot(updatedGameState, action);
+  }
+
+  /**
+   * Remove a participant from their party
+   * @param participantId ID of the participant
+   */
+  public removeParticipantFromParty(participantId: string): void {
+    if (!this.gameState.participants.has(participantId)) {
+      throw new Error(`Participant '${participantId}' does not exist`);
+    }
+
+    const participant = this.gameState.participants.get(participantId)!;
+    if (!participant.partyId) {
+      throw new Error(`Participant '${participantId}' is not in a party`);
+    }
+
+    const partyId = participant.partyId;
+    this.gameStateAPI.removeParticipantFromParty(participantId);
+    const updatedGameState = this.gameStateAPI.getGameState();
+
+    // Create action descriptor
+    const action: ActionDescriptor = {
+      type: 'participant_removed_from_party',
+      description: `Removed participant '${participantId}' from party '${partyId}'`,
+      participantId,
+      details: {
+        participantId,
+        formerPartyId: partyId,
+        partyMemberCount: updatedGameState.parties.get(partyId)?.participantIds.length || 0
+      },
+      timestamp: Date.now()
+    };
+
+    this.updateGameStateWithSnapshot(updatedGameState, action);
+  }
+
+  /**
+   * Create a pile for a party
+   * @param partyId ID of the party
+   * @param pileName Name of the pile
+   * @param isOrdered Whether the pile maintains card order
+   * @param orientation Default orientation for cards in this pile
+   */
+  public createPartyPile(partyId: string, pileName: string, isOrdered: boolean = true, orientation?: import('../core/types').CardOrientation): void {
+    if (!this.gameState.parties.has(partyId)) {
+      throw new Error(`Party '${partyId}' does not exist`);
+    }
+
+    this.gameStateAPI.createPartyPile(partyId, pileName, isOrdered, orientation);
+    this.gameState = this.gameStateAPI.getGameState();
+  }
+
+  /**
+   * Update party status
+   * @param partyId ID of the party
+   * @param key Status key to update
+   * @param value New status value
+   */
+  public updatePartyStatus(partyId: string, key: string, value: any): void {
+    if (!this.gameState.parties.has(partyId)) {
+      throw new Error(`Party '${partyId}' does not exist`);
+    }
+
+    this.gameStateAPI.updatePartyStatus(partyId, key, value);
+    this.gameState = this.gameStateAPI.getGameState();
+  }
+
+  /**
+   * Get all parties in the game
+   */
+  public getParties(): Map<string, import('../core/interfaces').Party> {
+    return new Map(this.gameState.parties);
+  }
+
+  /**
+   * Get participants belonging to a specific party
+   * @param partyId ID of the party
+   */
+  public getPartyParticipants(partyId: string): import('../core/interfaces').Participant[] {
+    const party = this.gameState.parties.get(partyId);
+    if (!party) {
+      return [];
+    }
+
+    return party.participantIds
+      .map(participantId => this.gameState.participants.get(participantId))
+      .filter((participant): participant is import('../core/interfaces').Participant => participant !== undefined);
+  }
+
+  /**
+   * Get the party that a participant belongs to
+   * @param participantId ID of the participant
+   */
+  public getParticipantParty(participantId: string): import('../core/interfaces').Party | null {
+    const participant = this.gameState.participants.get(participantId);
+    if (!participant || !participant.partyId) {
+      return null;
+    }
+
+    return this.gameState.parties.get(participant.partyId) || null;
   }
 
   /**
@@ -1015,7 +1237,8 @@ export class GameInstance {
       this.gameState.participants as Map<string, Participant>, // Keep participants
       new Map<string, Hand>(), // Clear hands
       [], // Clear events
-      this.gameState.metadata // Keep metadata
+      this.gameState.metadata, // Keep metadata
+      new Map<string, Party>() // Clear parties
     );
 
     this.isInitialized = false;
@@ -1040,6 +1263,7 @@ export class GameInstance {
         resetTimestamp: Date.now(),
         participantsKept: resetGameState.participants.size,
         handsCleared: this.gameState.hands.size,
+        partiesCleared: this.gameState.parties.size,
         eventsCleared: this.gameState.events.length
       },
       timestamp: Date.now()

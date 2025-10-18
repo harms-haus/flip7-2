@@ -1380,6 +1380,12 @@ export class GameStateAPIImpl implements GameStateAPI {
       if (filter.participantId) {
         events = events.filter(event => event.participantId === filter.participantId);
       }
+      if (filter.partyId) {
+        events = events.filter(event => 
+          event.data.partyId === filter.partyId ||
+          (event.participantId && this.gameState.participants.get(event.participantId)?.partyId === filter.partyId)
+        );
+      }
       if (filter.since) {
         events = events.filter(event => event.timestamp >= filter.since!);
       }

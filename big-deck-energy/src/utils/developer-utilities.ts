@@ -548,6 +548,7 @@ export class DeveloperUtilities {
             name: `Player ${i + 1}`,
             isNPC: false,
             handIds: [`hand_${i + 1}`],
+            partyId: null as string | null,
             status: {}
           }
         ])
@@ -565,6 +566,7 @@ export class DeveloperUtilities {
           }
         ])
       ),
+      parties: new Map(),
       events: [],
       metadata: {
         createdAt: Date.now(),

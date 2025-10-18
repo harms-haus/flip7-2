@@ -339,29 +339,29 @@
   - Test party status management and updates
   - _Requirements: 10.1, 10.2, 10.4, 10.5_
 
-- [ ] 14. Integrate party system with existing components
-- [ ] 14.1 Update serialization system for parties
+- [x] 14. Integrate party system with existing components
+- [x] 14.1 Update serialization system for parties
   - Add party serialization to game state JSON export
   - Update deserialization to restore party structures
   - Ensure party data is included in state snapshots
   - Add party information to action descriptors
   - _Requirements: 10.1, 10.5_
 
-- [ ] 14.2 Update event system for party operations
+- [x] 14.2 Update event system for party operations
   - Add party-specific event types for tracking party operations
   - Implement automatic event generation for party state changes
   - Update event filtering to support party-related events
   - Add party membership change events
   - _Requirements: 10.1, 10.5_
 
-- [ ] 14.3 Update Game Instance for party support
+- [x] 14.3 Update Game Instance for party support
   - Modify GameInstance class to handle party initialization
   - Add party management to game lifecycle operations
   - Update game state validation to include party consistency checks
   - Ensure party cleanup on game completion
   - _Requirements: 10.1, 10.4, 10.5_
 
-- [ ] 14.4 Write integration tests for party system
+- [x] 14.4 Write integration tests for party system
   - Test complete game scenarios with party-based teams
   - Test party serialization and deserialization
   - Test party event tracking and history

@@ -1,5 +1,6 @@
 import { GameState } from '../models/game-state';
 import { Participant } from '../models/participant';
+import { Party } from '../models/party';
 import { Gameboard, CardPile, CardPlacement } from '../models/gameboard';
 import { Hand } from '../models/hand';
 import { Card } from '../models/card';
@@ -34,6 +35,7 @@ export interface SerializedGameState {
     gameboard: SerializedGameboard;
     participants: SerializedParticipant[];
     hands: SerializedHand[];
+    parties: SerializedParty[];
     events: GameEvent[];
     metadata: Record<string, any>;
   };
@@ -61,6 +63,7 @@ export interface SerializedParticipant {
   name: string;
   isNPC: boolean;
   handIds: string[];
+  partyId: string | null;
   status: Record<string, any>;
 }
 
@@ -125,6 +128,18 @@ export interface SerializedCardInPlacement {
   faceUp: boolean;
   orientation: CardOrientation;
   owner: string | null;
+  status: Record<string, any>;
+}
+
+/**
+ * Serialized party format
+ */
+export interface SerializedParty {
+  id: string;
+  name: string;
+  participantIds: string[];
+  piles: SerializedCardPile[];
+  placements: SerializedCardPlacement[];
   status: Record<string, any>;
 }
 
@@ -547,6 +562,7 @@ export class SerializationEngine {
         gameboard: this.serializeGameboard(gameState.gameboard),
         participants: Array.from(gameState.participants.values()).map(p => this.serializeParticipant(p)),
         hands: Array.from(gameState.hands.values()).map(h => this.serializeHand(h)),
+        parties: Array.from(gameState.parties.values()).map(p => this.serializeParty(p)),
         events: [...gameState.events],
         metadata: { ...gameState.metadata }
       }
@@ -576,8 +592,18 @@ export class SerializationEngine {
       hands.set(hand.id, hand);
     }
 
-    // Validate participant-hand relationships
+    // Deserialize parties (handle backwards compatibility)
+    const parties = new Map<string, Party>();
+    if (data.parties) {
+      for (const serializedParty of data.parties) {
+        const party = this.deserializeParty(serializedParty);
+        parties.set(party.id, party);
+      }
+    }
+
+    // Validate relationships
     this.validateParticipantHandRelationships(participants, hands);
+    this.validatePartyRelationships(participants, parties);
 
     return new GameState(
       data.gameId,
@@ -585,9 +611,9 @@ export class SerializationEngine {
       this.deserializeGameboard(data.gameboard),
       participants,
       hands,
-      new Map(), // parties - empty for now since serialization doesn't support parties yet
       data.events,
-      data.metadata
+      data.metadata,
+      parties
     );
   }
 
@@ -600,6 +626,7 @@ export class SerializationEngine {
       name: participant.name,
       isNPC: participant.isNPC,
       handIds: [...participant.handIds],
+      partyId: participant.partyId,
       status: { ...participant.status }
     };
   }
@@ -613,6 +640,7 @@ export class SerializationEngine {
       serialized.name,
       serialized.isNPC,
       serialized.handIds,
+      serialized.partyId || null, // Handle backwards compatibility
       serialized.status
     );
   }
@@ -685,7 +713,49 @@ export class SerializationEngine {
       placements,
       serialized.status
     );
-  }  /**
+  }
+
+  /**
+   * Serialize a party
+   */
+  private static serializeParty(party: Party): SerializedParty {
+    return {
+      id: party.id,
+      name: party.name,
+      participantIds: [...party.participantIds],
+      piles: Array.from(party.piles.values()).map(p => this.serializeCardPile(p as any)),
+      placements: Array.from(party.placements.values()).map(p => this.serializeCardPlacement(p as any)),
+      status: { ...party.status }
+    };
+  }
+
+  /**
+   * Deserialize a party
+   */
+  private static deserializeParty(serialized: SerializedParty): Party {
+    const piles = new Map<string, CardPile>();
+    for (const serializedPile of serialized.piles) {
+      const pile = this.deserializeCardPile(serializedPile);
+      piles.set(pile.name, pile);
+    }
+
+    const placements = new Map<string, CardPlacement>();
+    for (const serializedPlacement of serialized.placements) {
+      const placement = this.deserializeCardPlacement(serializedPlacement);
+      placements.set(placement.name, placement);
+    }
+
+    return new Party(
+      serialized.id,
+      serialized.name,
+      serialized.participantIds,
+      piles,
+      placements,
+      serialized.status
+    );
+  }
+
+  /**
   
  * Serialize a card pile
    */
@@ -877,6 +947,52 @@ export class SerializationEngine {
         throw new SerializationError(
           `Participant ${hand.participantId} does not own hand ${hand.id}`
         );
+      }
+    }
+  }
+
+  /**
+   * Validate participant-party relationships after deserialization
+   */
+  private static validatePartyRelationships(
+    participants: Map<string, Participant>,
+    parties: Map<string, Party>
+  ): void {
+    // Check that all participant party IDs reference existing parties
+    for (const participant of participants.values()) {
+      if (participant.partyId !== null) {
+        const party = parties.get(participant.partyId);
+        if (!party) {
+          throw new SerializationError(
+            `Participant ${participant.id} references non-existent party: ${participant.partyId}`
+          );
+        }
+        
+        // Check that the party includes this participant
+        if (!party.participantIds.includes(participant.id)) {
+          throw new SerializationError(
+            `Party ${participant.partyId} does not include participant ${participant.id}`
+          );
+        }
+      }
+    }
+
+    // Check that all party participant IDs reference existing participants
+    for (const party of parties.values()) {
+      for (const participantId of party.participantIds) {
+        const participant = participants.get(participantId);
+        if (!participant) {
+          throw new SerializationError(
+            `Party ${party.id} references non-existent participant: ${participantId}`
+          );
+        }
+        
+        // Check that the participant belongs to this party
+        if (participant.partyId !== party.id) {
+          throw new SerializationError(
+            `Participant ${participantId} has mismatched party ID. Expected: ${party.id}, Found: ${participant.partyId}`
+          );
+        }
       }
     }
   }

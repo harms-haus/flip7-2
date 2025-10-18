@@ -25,9 +25,9 @@ export class GameState implements IGameState {
     gameboard: Gameboard = new Gameboard(),
     participants: Map<string, Participant> = new Map(),
     hands: Map<string, Hand> = new Map(),
-    parties: Map<string, Party> = new Map(),
-    events: GameEvent[] = [],
-    metadata: Record<string, any> = {}
+    events: GameEvent[] | undefined = [],
+    metadata: Record<string, any> = {},
+    parties: Map<string, Party> = new Map()
   ) {
     this.gameId = gameId;
     this.phase = phase;
@@ -35,7 +35,7 @@ export class GameState implements IGameState {
     this.participants = new Map(participants); // Create a copy
     this.hands = new Map(hands); // Create a copy
     this.parties = new Map(parties); // Create a copy
-    this.events = [...events]; // Create a copy
+    this.events = events ? [...events] : []; // Create a copy, handle undefined
     this.metadata = Object.freeze({ ...metadata });
     
     // Freeze collections and the instance
@@ -186,9 +186,9 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       this.hands,
-      this.parties,
       this.events,
-      this.metadata
+      this.metadata,
+      this.parties
     );
   }
 
@@ -202,9 +202,9 @@ export class GameState implements IGameState {
       gameboard,
       this.participants,
       this.hands,
-      this.parties,
       this.events,
-      this.metadata
+      this.metadata,
+      this.parties
     );
   }
 
@@ -218,9 +218,9 @@ export class GameState implements IGameState {
       this.gameboard,
       participants,
       this.hands,
-      this.parties,
       this.events,
-      this.metadata
+      this.metadata,
+      this.parties
     );
   }
 
@@ -234,9 +234,9 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       hands,
-      this.parties,
       this.events,
-      this.metadata
+      this.metadata,
+      this.parties
     );
   }
 
@@ -250,9 +250,9 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       this.hands,
-      parties,
       this.events,
-      this.metadata
+      this.metadata,
+      parties
     );
   }
 
@@ -266,9 +266,9 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       this.hands,
-      this.parties,
       events,
-      this.metadata
+      this.metadata,
+      this.parties
     );
   }
 
@@ -282,9 +282,9 @@ export class GameState implements IGameState {
       this.gameboard,
       this.participants,
       this.hands,
-      this.parties,
       this.events,
-      metadata
+      metadata,
+      this.parties
     );
   }
 
