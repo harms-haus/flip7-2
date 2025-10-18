@@ -368,14 +368,14 @@
   - Test party compatibility with existing rulesets
   - _Requirements: 10.1, 10.2, 10.4, 10.5_
 
-- [ ] 15. Create party system examples and documentation
-- [ ] 15.1 Implement team-based card game example
+- [x] 15. Create party system examples and documentation
+- [x] 15.1 Implement team-based card game example
   - Create a simple team-based card game ruleset using parties
   - Demonstrate party resource sharing and team mechanics
   - Show party status tracking and team win conditions
   - _Requirements: 10.1, 10.2, 10.5_
 
-- [ ] 15.2 Update library documentation for party system
+- [x] 15.2 Update library documentation for party system
   - Add party system documentation to README
   - Create API documentation for party-related methods
   - Add examples of party usage in different game scenarios
