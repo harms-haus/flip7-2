@@ -3,7 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { GameConfiguration } from '../types';
 import { ApplicationSettings } from '../types/application-state';
 import { GameSetupResult } from '../types/actions';
-import { Participant } from '../../../src/models/participant.js';
+import { Participant } from 'big-deck-energy';
 
 interface GameSetupProps {
   game: GameConfiguration;

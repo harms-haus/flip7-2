@@ -1,5 +1,5 @@
 // Mock BigDeckEnergy library for testing
-export class GameInstance {
+class GameInstance {
   constructor() {
     this.gameState = new GameState();
     this.isGameOver = jest.fn(() => false);
@@ -8,7 +8,7 @@ export class GameInstance {
   }
 }
 
-export class GameState {
+class GameState {
   constructor() {
     this.participants = new Map();
     this.gameboard = new Gameboard();
@@ -16,29 +16,61 @@ export class GameState {
   }
 }
 
-export class Participant {
-  constructor(id, name) {
+class Participant {
+  constructor(id, name, isNPC = false, handIds = [], status = {}) {
     this.id = id;
     this.name = name;
-    this.hand = new Hand();
+    this.isNPC = isNPC;
+    this.handIds = handIds;
+    this.status = status;
+    this.partyId = null;
+    
+    // Add required methods
+    this.hasHands = jest.fn(() => handIds.length > 0);
+    this.ownsHand = jest.fn(() => false);
+    this.getStatus = jest.fn(() => status);
+    this.setStatus = jest.fn();
+    this.addHand = jest.fn();
+    this.removeHand = jest.fn();
+    this.getHands = jest.fn(() => []);
+    this.clearHands = jest.fn();
+    this.toJSON = jest.fn(() => ({ id, name, isNPC, handIds, status }));
   }
 }
 
-export class Hand {
+class Hand {
+  constructor(id = 'hand1', name = 'Hand', participantId = 'player1') {
+    this.id = id;
+    this.name = name;
+    this.participantId = participantId;
+    this.piles = new Map();
+    this.placements = new Map();
+    this.status = {};
+    
+    // Add required methods
+    this.getPile = jest.fn();
+    this.getPlacement = jest.fn();
+    this.hasPile = jest.fn(() => false);
+    this.hasPlacement = jest.fn(() => false);
+    this.addPile = jest.fn();
+    this.removePile = jest.fn();
+    this.addPlacement = jest.fn();
+    this.removeePlacement = jest.fn();
+    this.clearPiles = jest.fn();
+    this.clearPlacements = jest.fn();
+    this.toJSON = jest.fn(() => ({ id, name, participantId, piles: [], placements: [], status }));
+  }
+}
+
+class Gameboard {
   constructor() {
-    this.piles = [];
-    this.placements = [];
+    this.piles = new Map();
+    this.placements = new Map();
+    this.status = {};
   }
 }
 
-export class Gameboard {
-  constructor() {
-    this.piles = [];
-    this.placements = [];
-  }
-}
-
-export class Card {
+class Card {
   constructor(id, properties = {}) {
     this.id = id;
     this.properties = properties;
@@ -47,31 +79,41 @@ export class Card {
   }
 }
 
-export class CardPile {
-  constructor(cards = []) {
-    this.cards = cards;
+class CardPile {
+  constructor(id = 'pile1', name = 'Pile', cards = []) {
+    this.id = id;
+    this.name = name;
+    this.cards = cards.map(card => ({
+      card,
+      faceUp: true,
+      orientation: 'normal',
+      owner: null,
+      status: {}
+    }));
     this.count = cards.length;
+    this.maxSize = null;
+    this.status = {};
   }
 }
 
-export const GamePhase = {
+const GamePhase = {
   SETUP: 'setup',
   PLAYING: 'playing',
   ENDED: 'ended'
 };
 
 // Mock rulesets and deck types
-export const WarRuleset = class {
+const WarRuleset = class {
   static gameId = 'war';
   static displayName = 'War';
 };
 
-export const StandardPlayingDeck = class {
+const StandardPlayingDeck = class {
   static deckType = 'standard';
   static displayName = 'Standard Playing Cards';
 };
 
-export default {
+module.exports = {
   GameInstance,
   GameState,
   Participant,

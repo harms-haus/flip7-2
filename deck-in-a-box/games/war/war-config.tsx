@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { GameState, GameInstance, Hand, Gameboard } from 'big-deck-energy';
-import { Participant } from '../../../src/models/participant.js';
+import { Participant } from 'big-deck-energy';
 import { GameConfiguration } from '../../src/types/game-configuration';
 import { ActionDefinition, GameSetupResult, GameStats, GameResult } from '../../src/types/actions';
 

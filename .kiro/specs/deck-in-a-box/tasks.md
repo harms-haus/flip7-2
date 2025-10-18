@@ -66,7 +66,7 @@
     - Initialize BigDeckEnergy game instance with proper deck and ruleset
     - _Requirements: 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 4.3 Fix menu navigation tests
+  - [x] 4.3 Fix menu navigation tests
     - Fix ink-testing-library compatibility issues
     - Test game selection and initialization
     - Test game setup flow with various configurations

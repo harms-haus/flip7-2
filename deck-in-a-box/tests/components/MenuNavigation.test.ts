@@ -278,14 +278,11 @@ describe('Menu Navigation Logic', () => {
     it('should create participant objects correctly', async () => {
       const playerNames = ['Alice', 'Bob'];
       
-      // Simulate participant creation
-      const participants = playerNames.map((name, index) => ({
-        id: `player_${index + 1}`,
-        name: name.trim(),
-        isNPC: false,
-        handIds: [],
-        status: {},
-      }));
+      // Simulate participant creation using the mock Participant class
+      const { Participant } = require('big-deck-energy');
+      const participants = playerNames.map((name, index) => 
+        new Participant(`player_${index + 1}`, name.trim(), false, [], {})
+      );
       
       expect(participants).toHaveLength(2);
       expect(participants[0].name).toBe('Alice');

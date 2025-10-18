@@ -50,22 +50,6 @@ Object.defineProperty(globalThis, 'import', {
   }
 });
 
-// Mock React components for testing
-jest.mock('ink', () => ({
-  render: jest.fn(() => ({ unmount: jest.fn() })),
-  Box: ({ children }: any) => children,
-  Text: ({ children }: any) => children,
-  useInput: jest.fn(),
-  useApp: jest.fn(() => ({ exit: jest.fn() })),
-}));
+// Don't mock ink - let it work naturally with ink-testing-library
 
-// Mock ink-testing-library
-jest.mock('ink-testing-library', () => ({
-  render: jest.fn(() => ({
-    container: { innerHTML: '' },
-    getByText: jest.fn((text: string) => ({ textContent: text })),
-    queryByText: jest.fn(() => null),
-    unmount: jest.fn(),
-    rerender: jest.fn(),
-  })),
-}));
+// Don't mock ink-testing-library - let it work naturally
