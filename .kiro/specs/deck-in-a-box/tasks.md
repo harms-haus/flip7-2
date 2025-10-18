@@ -7,20 +7,20 @@
   - Define core interfaces for GameConfiguration, UIAdapter, and ApplicationState
   - _Requirements: 1.1, 6.1_
 
-- [ ] 2. Implement terminal capability detection and responsive layout system
-  - [ ] 2.1 Create terminal capability detection utilities
+- [x] 2. Implement terminal capability detection and responsive layout system
+  - [x] 2.1 Create terminal capability detection utilities
     - Write functions to detect terminal size, color support, Unicode support, and interactive mode
     - Implement terminal resize event handling with React hooks
     - Create TerminalCapabilities interface and detection logic
     - _Requirements: 3.5, 7.5_
 
-  - [ ] 2.2 Build responsive layout system
+  - [x] 2.2 Build responsive layout system
     - Implement ResponsiveAreaDefinition and LayoutConfiguration interfaces
     - Create layout calculation functions that adapt to different terminal sizes
     - Build responsive Box components that change layout based on terminal width
     - _Requirements: 3.1, 3.2_
 
-  - [ ] 2.3 Write unit tests for layout system
+  - [x] 2.3 Write unit tests for layout system
     - Test terminal capability detection with mock terminal environments
     - Test responsive layout calculations for different screen sizes
     - Test graceful degradation scenarios

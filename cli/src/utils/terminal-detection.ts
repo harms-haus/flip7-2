@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { TerminalCapabilities, AdaptiveUIConfig } from '../types';
 
 /**
@@ -152,4 +153,62 @@ export function validateTerminalRequirements(
   }
   
   return { valid, warnings };
+}
+
+/**
+ * React hook for terminal capability detection with resize handling.
+ * Automatically updates when terminal size changes.
+ */
+export function useTerminalCapabilities(): TerminalCapabilities {
+  const [capabilities, setCapabilities] = useState<TerminalCapabilities>(() =>
+    detectTerminalCapabilities()
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setCapabilities(detectTerminalCapabilities());
+    };
+
+    // Listen for terminal resize events
+    process.stdout.on('resize', handleResize);
+
+    // Cleanup listener on unmount
+    return () => {
+      process.stdout.off('resize', handleResize);
+    };
+  }, []);
+
+  return capabilities;
+}
+
+/**
+ * React hook for adaptive UI configuration that updates with terminal changes.
+ */
+export function useAdaptiveUIConfig(): AdaptiveUIConfig {
+  const capabilities = useTerminalCapabilities();
+  const [config, setConfig] = useState<AdaptiveUIConfig>(() =>
+    createAdaptiveUIConfig(capabilities)
+  );
+
+  useEffect(() => {
+    setConfig(createAdaptiveUIConfig(capabilities));
+  }, [capabilities]);
+
+  return config;
+}
+
+/**
+ * React hook for terminal requirement validation.
+ */
+export function useTerminalValidation(): { valid: boolean; warnings: string[] } {
+  const capabilities = useTerminalCapabilities();
+  const [validation, setValidation] = useState(() =>
+    validateTerminalRequirements(capabilities)
+  );
+
+  useEffect(() => {
+    setValidation(validateTerminalRequirements(capabilities));
+  }, [capabilities]);
+
+  return validation;
 }

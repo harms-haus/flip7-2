@@ -1,4 +1,8 @@
-import { detectTerminalCapabilities, createAdaptiveUIConfig, validateTerminalRequirements } from '../../src/utils/terminal-detection';
+import { 
+  detectTerminalCapabilities, 
+  createAdaptiveUIConfig, 
+  validateTerminalRequirements
+} from '../../src/utils/terminal-detection';
 
 describe('Terminal Detection', () => {
   const originalEnv = process.env;
@@ -175,6 +179,17 @@ describe('Terminal Detection', () => {
       expect(result.valid).toBe(true);
       expect(result.warnings).toContain('Terminal does not support colors. Display will be monochrome.');
       expect(result.warnings).toContain('Terminal does not support Unicode. Card symbols will be simplified.');
+    });
+  });
+
+  describe('React Hooks Integration', () => {
+    test('should have React hooks available for integration', () => {
+      // Test that the hooks are exported and can be imported
+      const { useTerminalCapabilities, useAdaptiveUIConfig, useTerminalValidation } = require('../../src/utils/terminal-detection');
+      
+      expect(typeof useTerminalCapabilities).toBe('function');
+      expect(typeof useAdaptiveUIConfig).toBe('function');
+      expect(typeof useTerminalValidation).toBe('function');
     });
   });
 });
