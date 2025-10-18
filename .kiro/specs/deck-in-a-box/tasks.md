@@ -89,26 +89,26 @@
     - Test input validation and error handling
     - _Requirements: 2.3, 2.4_
 
-- [ ] 6. Implement event-driven game loop and state management
-  - [ ] 6.1 Create GameLoop class with EventEmitter
+- [x] 6. Implement event-driven game loop and state management
+  - [x] 6.1 Create GameLoop class with EventEmitter
     - Implement event-driven architecture for turn-based gameplay
     - Build action processing with atomic state updates
     - Add turn timer functionality for optional time limits
     - _Requirements: 4.2, 4.3_
 
-  - [ ] 6.2 Build game state synchronization
+  - [x] 6.2 Build game state synchronization
     - Implement state update broadcasting to UI components
     - Create game state validation and consistency checks
     - Add game phase tracking and transition logic
     - _Requirements: 3.1, 4.1_
 
-  - [ ] 6.3 Integrate with BigDeckEnergy library
+  - [x] 6.3 Integrate with BigDeckEnergy library
     - Create wrapper functions for BigDeckEnergy game instances
     - Implement game state serialization and deserialization
     - Build compatibility validation between deck types and rulesets
     - _Requirements: 2.5, 4.4_
 
-  - [ ] 6.4 Write game loop tests
+  - [x] 6.4 Write game loop tests
     - Test event-driven action processing and state updates
     - Test turn management and game phase transitions
     - Test BigDeckEnergy integration and compatibility validation

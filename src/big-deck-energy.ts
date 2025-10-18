@@ -71,10 +71,10 @@ import { GoFishRuleset } from './rulesets/go-fish/go-fish-ruleset';
 export interface BigDeckEnergyConfig {
   /** Enable debug logging */
   debug?: boolean;
-  
+
   /** Custom logger function */
   logger?: (level: 'debug' | 'info' | 'warn' | 'error', message: string, data?: any) => void;
-  
+
   /** Thread safety mode for concurrent access */
   threadSafe?: boolean;
 }
@@ -134,7 +134,7 @@ export class BigDeckEnergy {
 
     // Register built-in deck types
     this.registerBuiltInDeckTypes();
-    
+
     // Register built-in rulesets
     this.registerBuiltInRulesets();
 
@@ -233,13 +233,13 @@ export class BigDeckEnergy {
       // If successful, add to active games registry
       if (result.success && result.gameInstance) {
         this.activeGames.set(config.gameId, result.gameInstance);
-        this.log('info', 'Game created successfully', { 
+        this.log('info', 'Game created successfully', {
           gameId: config.gameId,
           ruleset: config.ruleset.name,
           deckType: config.deckType.name
         });
       } else {
-        this.log('error', 'Game creation failed', { 
+        this.log('error', 'Game creation failed', {
           gameId: config.gameId,
           error: result.error?.message
         });
@@ -323,8 +323,8 @@ export class BigDeckEnergy {
    * @since 1.0.0
    */
   public registerDeckType(
-    name: string, 
-    deckType: DeckType, 
+    name: string,
+    deckType: DeckType,
     metadata: Partial<DeckTypeRegistryEntry['metadata']> = {}
   ): void {
     if (this.deckTypeRegistry.has(name)) {
@@ -394,8 +394,8 @@ export class BigDeckEnergy {
    * @since 1.0.0
    */
   public registerRuleset(
-    name: string, 
-    ruleset: Ruleset, 
+    name: string,
+    ruleset: Ruleset,
     metadata: Partial<RulesetRegistryEntry['metadata']> = {}
   ): void {
     if (this.rulesetRegistry.has(name)) {
@@ -516,7 +516,7 @@ export class BigDeckEnergy {
 
     const availableDeckTypes = Array.from(this.deckTypeRegistry.values()).map(entry => entry.deckType);
     const compatibleDeckTypes = CompatibilityValidator.findCompatibleDeckTypes(ruleset, availableDeckTypes);
-    
+
     return compatibleDeckTypes.map(deckType => deckType.name);
   }
 
@@ -533,7 +533,7 @@ export class BigDeckEnergy {
 
     const availableRulesets = Array.from(this.rulesetRegistry.values()).map(entry => entry.ruleset);
     const compatibleRulesets = CompatibilityValidator.findCompatibleRulesets(deckType, availableRulesets);
-    
+
     return compatibleRulesets.map(ruleset => ruleset.name);
   }
 
@@ -695,8 +695,8 @@ export class BigDeckEnergy {
         }
       });
 
-      this.log('debug', 'Built-in deck types registered', { 
-        count: this.deckTypeRegistry.size 
+      this.log('debug', 'Built-in deck types registered', {
+        count: this.deckTypeRegistry.size
       });
     } catch (error) {
       this.log('error', 'Failed to register built-in deck types', { error });
@@ -738,8 +738,8 @@ export class BigDeckEnergy {
         }
       });
 
-      this.log('debug', 'Built-in rulesets registered', { 
-        count: this.rulesetRegistry.size 
+      this.log('debug', 'Built-in rulesets registered', {
+        count: this.rulesetRegistry.size
       });
     } catch (error) {
       this.log('error', 'Failed to register built-in rulesets', { error });
@@ -789,7 +789,7 @@ export class BigDeckEnergy {
 
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${level.toUpperCase()}] BigDeckEnergy: ${message}`;
-    
+
     if (data) {
       console.log(logMessage, data);
     } else {
@@ -832,7 +832,7 @@ export namespace BigDeckEnergyUtils {
     library?: BigDeckEnergy
   ): Promise<GameCreationResult> {
     const bde = library || BigDeckEnergy.getInstance();
-    
+
     // Validate compatibility first
     const compatibility = bde.validateCompatibility(rulesetName, deckTypeName);
     if (!compatibility.isCompatible) {
